@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  invoice      String   @unique
+  amount       Float
+  currency     String   @default("INR")
+  status       String   @default("created")
+  shippingCost Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  payments     Payment[]
+  shipment     Shipment?
+}
+
+model Payment {
+  id                 String   @id @default(uuid())
+  orderId            String
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+  razorpaySignature  String?
+  status             String   @default("created")
+  amount             Float
+  currency           String   @default("INR")
+  createdAt          DateTime @default(now())
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Shipment {
+  id               String   @id @default(uuid())
+  orderId          String?  @unique // Make optional for direct tests
+  awb              String?
+  courierCompany   String   @default("Delhivery")
+  status           String   @default("created")
+  payload          String?  // Use String for SQLite
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  order            Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
