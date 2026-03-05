@@ -34,14 +34,30 @@ const pool = mysql.createPool({
 
 // ============ ROUTES ============
 
-// 1. Health Check
+// ==================== HEALTH CHECK ENDPOINTS ====================
+
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Backend running on nx.nekxuz.in',
-    database: 'MySQL',
-    payment: 'Razorpay LIVE'
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'Nekxuz Backend',
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'production'
   });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'Nekxuz Backend',
+    uptime: process.uptime()
+  });
+});
+
+// --- API ENDPOINTS ---
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'Nekxuz Backend Running' });
 });
 
 // 2. Get Stock
