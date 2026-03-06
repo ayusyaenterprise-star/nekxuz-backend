@@ -3,6 +3,7 @@ services:
     name: nekxuz-backend
     runtime: node
     plan: free
+    nodeVersion: 20
     buildCommand: npm install && npx prisma generate
     startCommand: node server.js
     envVars:
