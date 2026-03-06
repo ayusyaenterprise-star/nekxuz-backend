@@ -27,6 +27,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate || true"
   }
 }
