@@ -14,14 +14,22 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { execSync } = require('child_process');
 
+console.log('🚀 Server starting...');
+console.log('📁 Current working directory:', process.cwd());
+console.log('📝 Node environment:', process.env.NODE_ENV || 'development');
+
 // Initialize Prisma with generation safeguard
 let prisma;
 try {
+  console.log('🔄 Initializing Prisma...');
+  
   // First, ensure Prisma client is generated
   try {
+    console.log('📦 Running: npx prisma generate');
     execSync('npx prisma generate', { stdio: 'inherit', cwd: process.cwd() });
+    console.log('✅ Prisma generation completed');
   } catch (err) {
-    console.log('Prisma generation attempted (may already exist)');
+    console.log('⚠️ Prisma generation error (may already exist):', err.message);
   }
   
   // Now import and initialize
@@ -30,6 +38,7 @@ try {
   console.log('✅ Prisma Client initialized successfully');
 } catch (err) {
   console.error('❌ Prisma initialization error:', err.message);
+  console.error('Stack:', err.stack);
   process.exit(1);
 }
 
@@ -1195,17 +1204,27 @@ async function testDatabase() {
 }
 
 // Start Server
-// Start Server
-app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`Nekxuz Server running on port ${PORT}`);
-  console.log(`Listening on http://0.0.0.0:${PORT}`);
-  console.log(`🗄️ Database: PostgreSQL (from Render)`);
-  if (process.env.RAZORPAY_KEY_ID) {
-     console.log(`Razorpay Key Loaded: ${process.env.RAZORPAY_KEY_ID.substring(0, 8)}...`);
-  }
+const server = app.listen(PORT, '0.0.0.0', async () => {
+  try {
+    console.log(`\n✅ Nekxuz Server running on port ${PORT}`);
+    console.log(`📍 Listening on http://0.0.0.0:${PORT}`);
+    console.log(`🗄️ Database: PostgreSQL (from Render)`);
+    if (process.env.RAZORPAY_KEY_ID) {
+       console.log(`💳 Razorpay Key Loaded: ${process.env.RAZORPAY_KEY_ID.substring(0, 8)}...`);
+    }
+    console.log(`🚀 Server fully started and ready!\n`);
 
-  // Test database
-  await testDatabase();
+    // Test database
+    await testDatabase();
+  } catch (err) {
+    console.error('❌ Error during server startup:', err);
+    process.exit(1);
+  }
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
+  process.exit(1);
 });
 
 // Error handling
