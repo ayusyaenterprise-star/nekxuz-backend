@@ -1,0 +1,69 @@
+# 🚀 QUICK DEPLOY - Nekxuz to Hostinger
+
+## 30-Second Deploy
+
+### Option A: Automated (Easiest)
+```bash
+cd "/Users/ayushgupta/Documents/untitled folder/Nekxuz copy"
+./deploy-hostinger.sh
+```
+
+### Option B: Manual SCP
+```bash
+cd "/Users/ayushgupta/Documents/untitled folder/Nekxuz copy"
+scp -r -P 65002 build_hostinger/* u875570433@89.117.27.154:/home/u875570433/public_html/
+```
+
+### Option C: Via File Manager
+1. Hostinger → File Manager
+2. public_html → Delete old files
+3. Upload contents of `build_hostinger/`
+
+---
+
+## Verify It Works
+
+```bash
+# Wait 30 seconds for files to sync, then:
+curl https://nekxuz.in                    # Should show HTML
+curl https://nekxuz.in/index.html         # Should show React app
+curl https://nekxuz.in/assets/cataloges/honey%20almond%20-600/1.jpg  # Should show image
+```
+
+---
+
+## What's Included
+
+✅ React app (production build)  
+✅ All product images  
+✅ SPA routing (.htaccess)  
+✅ Gzip compression  
+✅ Security headers  
+✅ PDF generation (jsPDF)  
+
+---
+
+## Backend
+
+Already configured:
+- API: `https://nekxuz-backend-oqcn.onrender.com`
+- No .env needed (it's in the code)
+
+Test: `curl https://nekxuz-backend-oqcn.onrender.com/api/health`
+
+---
+
+## Rollback (If Needed)
+
+```bash
+ssh -p 65002 u875570433@89.117.27.154
+mv public_html public_html.new
+mv public_html.backup.* public_html  # Use the most recent
+```
+
+---
+
+**Size**: 166 KB gzipped  
+**Time**: < 5 minutes to deploy  
+**Downtime**: < 1 minute  
+**Status**: ✅ Ready

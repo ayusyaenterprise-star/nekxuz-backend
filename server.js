@@ -346,17 +346,22 @@ app.post('/api/payment/create-order', async (req, res) => {
 // --- GET USER ORDERS ---
 app.get('/api/orders', async (req, res) => {
   try {
-    const { email } = req.query;
+    const { email, userId } = req.query;
     
-    if (!email) {
-      return res.status(400).json({ error: "email parameter required" });
+    if (!email && !userId) {
+      return res.status(400).json({ error: "email or userId parameter required" });
     }
 
-    // Query orders by customer email
+    // Query orders by customer email OR userId
+    const whereClause = {};
+    if (userId) {
+      whereClause.userId = userId; // Filter by Firebase user ID (preferred)
+    } else {
+      whereClause.buyerEmail = email; // Fallback to email
+    }
+
     const orders = await prisma.order.findMany({
-      where: {
-        buyerEmail: email  // Filter by buyer email
-      },
+      where: whereClause,
       include: {
         payments: true,
         shipment: true
@@ -401,7 +406,7 @@ app.get('/api/orders', async (req, res) => {
 app.post('/api/payment/verify', async (req, res) => {
   try {
     console.log("Verify Payment Request");
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, meta, invoicePayload } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, meta, invoicePayload, userId } = req.body;
     
     // 1. Signature Verification
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || '');
@@ -533,6 +538,7 @@ app.post('/api/payment/verify', async (req, res) => {
               subtotal: payload.invoice ? payload.invoice.subtotal : 0,
               tax: payload.invoice ? payload.invoice.totalTax : 0,
               shippingCharges: payload.invoice ? payload.invoice.shippingCharges : 0,
+              userId: userId || null, // Store Firebase user ID
               buyerName: payload.buyer || null,
               buyerEmail: payload.buyerEmail || null,
               buyerPhone: payload.buyerPhone || null,

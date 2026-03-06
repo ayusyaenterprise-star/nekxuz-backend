@@ -40,7 +40,8 @@ model Order {
   tax               Float    @default(0)
   shippingCharges   Float    @default(0)
   
-  // Buyer Information
+  // User/Buyer Information
+  userId            String?  // Firebase user ID
   buyerName         String?
   buyerEmail        String?
   buyerPhone        String?
@@ -56,6 +57,7 @@ model Order {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
+  @@index([userId])
   @@index([buyerEmail])
   @@index([status])
 }

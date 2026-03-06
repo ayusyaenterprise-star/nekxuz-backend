@@ -1,0 +1,1 @@
+doc.fontSize(12).bold().text(...)  // ❌ WRONG - .bold() doesn't exist

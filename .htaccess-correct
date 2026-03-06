@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # DO NOT route /backend/ or /api/ - let them pass through to backend folder
+  RewriteCond %{REQUEST_URI} !^/backend/
+  RewriteCond %{REQUEST_URI} !^/api/
+  
+  # For React frontend - route other requests to index.html
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
