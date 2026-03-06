@@ -6,7 +6,115 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signO
 import { getFirestore } from "firebase/firestore";
 
 // --- Configuration ---
-const apiKey = ""; // Gemini API Key
+const apiKey = "AIzaSyDV3LF8xF-zHgJ5K2mN8pQrStUvWxYzAbC";
+const API_BASE_URL = "https://nekxuz-backend-oqcn.onrender.com"; // ✅ CORRECT - Full URL
+
+// --- Firebase Configuration ---
+const firebaseConfig = {
+    apiKey: "AIzaSyCp_B50oMUb_lMBxpAOxh5qcSPeng9PbyM",
+    authDomain: "nekxuz-27e49.firebaseapp.com",
+    projectId: "nekxuz-27e49",
+    storageBucket: "nekxuz-27e49.firebasestorage.app",
+    messagingSenderId: "303644694658",
+    appId: "1:303644694658:web:2118c56969b0522db77c9b",
+    measurementId: "G-CEED34LWJ0"
+};
+
+// --- Initialize Firebase ---
+let app, auth, db, analytics;
+try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    analytics = getAnalytics(app);
+    console.log("Firebase Initialized Successfully");
+} catch (error) {
+    console.error("Firebase Initialization Error:", error);
+}
+
+// --- AI Service ---
+let genAI = null;
+try {
+    if(apiKey) {
+        genAI = new GoogleGenerativeAI(apiKey);
+    }
+} catch (e) {
+    console.error("AI Init Error", e);
+}
+
+// --- Shared Product Data (Single Source of Truth) ---
+const ALL_PRODUCTS = [
+    // Skin Care Items
+    {
+        id: 104, category: 'Skin Care', title: "VelSoft Glow Cocoa Rich Butter Lotion - 100ml", price: "₹45", moq: "12 pcs", img: "/assets/cataloges/honey%20almond%20-600/1.jpg",
+        pricing: { mrp: 80, sample: 50, tiers: [{qty:12, price:45}, {qty:24, price:35}, {qty:50, price:25}, {qty:100, price:20}] },
+        manufacturer: "Real Herbal Cosmetics",
+        address: "H136 Sector 5, Bawana Industrial Area, New Delhi-110039",
+        description: `Nature’s Sweetest Secret for Soft, Glowing Skin
+
+Wrap your skin in the luxurious embrace of VelSoft Glow Honey Almond. This rich formula combines the golden goodness of pure Honey with the deep-nourishing properties of Almond Oil. Designed for daily hydration, it restores your skin’s natural moisture barrier while leaving behind a subtle, sweet fragrance. The large 600ml bottle ensures you have long-lasting care for the whole family.
+
+Why Your Skin Will Love It:
+The Power of Honey: A natural humectant, honey draws moisture into the skin and locks it there, giving you a plump, dewy look and an instant "Glow."
+
+Almond Oil Nourishment: Rich in Vitamin E, almond oil softens rough texture and helps improve skin complexion, making it feel silky smooth.
+
+Deeply Soothing: Perfect for soothing tired or irritated skin, this blend provides comfort and essential hydration without feeling sticky.
+Lightweight & Absorbent: Despite its rich ingredients, the lotion absorbs quickly, allowing your skin to breathe while staying moisturized all day.
+Family Value Size: The generous 600ml volume offers excellent value, ensuring you never run out of your daily skincare staple.
+
+Key Features:
+Volume: 600ml (Mega Value Pack / Family Size)
+Skin Type: Suitable for Normal to Dry Skin
+Key Ingredients: Honey Extract & Sweet Almond Oil
+Scent: Warm, Sweet, and Nutty
+
+How to Use:
+Dispense a generous amount from the bottle.
+Apply evenly all over the body, paying attention to dry areas like knees and elbows.
+Massage gently until fully absorbed to reveal soft, glowing skin.
+Get the golden glow of honey and the softness of almonds in one bottle.`
+    },
+    {
+        id: 106, category: 'Skin Care', title: "Devson Neem & Lime Whitening Cream - 50gm", price: "₹40", moq: "12 pcs", img: "/assets/cataloges/neem%20lime-50/1.jpg",
+        source: "Direct from Wholeseller",
+        manufacturer: "Devayush Enterprise",
+        address: "Near Rohini Sector 24, New Delhi-110042",
+        pricing: { mrp: 90, sample: 60, tiers: [{qty:12, price:40}, {qty:24, price:35}, {qty:50, price:30}, {qty:100, price:25}] },
+        description: `Purify, Brighten, and Restore Your Natural Radiance
+
+Experience the perfect balance of clarity and glow with Devson Neem & Lime Whitening Cream. This expert formula harnesses the ancient purifying power of Neem and the zesty, brightening energy of Lime. Designed to tackle dullness and uneven skin tone, it works actively to clear impurities while revealing a lighter, fresher complexion.
+
+Why Your Skin Will Love It:
+Dual-Action Formula:
+Neem: Known for its antibacterial properties, it deeply detoxifies the skin, fighting acne-causing bacteria and preventing breakouts.
+
+Lime: Rich in Vitamin C, it acts as a natural bleaching agent to lighten dark spots, remove tan, and control excess oil.
+
+Visible Brightening: Helps fade pigmentation and blemishes, promoting a clearer and more even skin tone.
+Oil Control: The citrus extracts regulate sebum production, giving you a matte, shine-free finish perfect for daily wear.
+Clear & Healthy Glow: Unlike harsh creams that dry you out, this formula maintains skin health while delivering a radiant "whitening" effect.
+
+Key Features:
+Volume: 50gm (Perfect for daily facial care)
+Skin Type: Ideal for Oily, Acne-Prone, and Dull Skin
+Key Ingredients: Neem Extract & Lime (Citrus) Extract
+Benefit: Spot Reduction & Skin Brightening
+
+How to Use:
+Cleanse your face thoroughly with a face wash.
+Take a small amount of Devson cream on your fingertips.
+Dot it over your face and neck.
+Massage gently inimport React, { useState, useEffect, useMemo, useRef } from "react";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+// --- Configuration ---
+const apiKey = "AIzaSyDV3LF8xF-zHgJ5K2mN8pQrStUvWxYzAbC";
+const API_BASE_URL = "https://nx.nekxuz.in"; // ✅ CORRECT - Full URL
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -53,26 +161,26 @@ const ALL_PRODUCTS = [
 
 Wrap your skin in the luxurious embrace of VelSoft Glow Honey Almond. This rich formula combines the golden goodness of pure Honey with the deep-nourishing properties of Almond Oil. Designed for daily hydration, it restores your skin’s natural moisture barrier while leaving behind a subtle, sweet fragrance. The large 600ml bottle ensures you have long-lasting care for the whole family.
 
-Why Your Skin Will Love It:
-The Power of Honey: A natural humectant, honey draws moisture into the skin and locks it there, giving you a plump, dewy look and an instant "Glow."
+    Why Your Skin Will Love It:
+    The Power of Honey: A natural humectant, honey draws moisture into the skin and locks it there, giving you a plump, dewy look and an instant "Glow."
 
 Almond Oil Nourishment: Rich in Vitamin E, almond oil softens rough texture and helps improve skin complexion, making it feel silky smooth.
 
-Deeply Soothing: Perfect for soothing tired or irritated skin, this blend provides comfort and essential hydration without feeling sticky.
-Lightweight & Absorbent: Despite its rich ingredients, the lotion absorbs quickly, allowing your skin to breathe while staying moisturized all day.
-Family Value Size: The generous 600ml volume offers excellent value, ensuring you never run out of your daily skincare staple.
+    Deeply Soothing: Perfect for soothing tired or irritated skin, this blend provides comfort and essential hydration without feeling sticky.
+    Lightweight & Absorbent: Despite its rich ingredients, the lotion absorbs quickly, allowing your skin to breathe while staying moisturized all day.
+    Family Value Size: The generous 600ml volume offers excellent value, ensuring you never run out of your daily skincare staple.
 
-Key Features:
-Volume: 600ml (Mega Value Pack / Family Size)
+    Key Features:
+    Volume: 600ml (Mega Value Pack / Family Size)
 Skin Type: Suitable for Normal to Dry Skin
 Key Ingredients: Honey Extract & Sweet Almond Oil
 Scent: Warm, Sweet, and Nutty
 
 How to Use:
-Dispense a generous amount from the bottle.
-Apply evenly all over the body, paying attention to dry areas like knees and elbows.
-Massage gently until fully absorbed to reveal soft, glowing skin.
-Get the golden glow of honey and the softness of almonds in one bottle.`
+    Dispense a generous amount from the bottle.
+    Apply evenly all over the body, paying attention to dry areas like knees and elbows.
+    Massage gently until fully absorbed to reveal soft, glowing skin.
+    Get the golden glow of honey and the softness of almonds in one bottle.`
     },
     { 
       id: 106, category: 'Skin Care', title: "Devson Neem & Lime Whitening Cream - 50gm", price: "₹40", moq: "12 pcs", img: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&q=80&w=400",
@@ -84,160 +192,54 @@ Get the golden glow of honey and the softness of almonds in one bottle.`
 
 Experience the perfect balance of clarity and glow with Devson Neem & Lime Whitening Cream. This expert formula harnesses the ancient purifying power of Neem and the zesty, brightening energy of Lime. Designed to tackle dullness and uneven skin tone, it works actively to clear impurities while revealing a lighter, fresher complexion.
 
-Why Your Skin Will Love It:
-Dual-Action Formula:
-Neem: Known for its antibacterial properties, it deeply detoxifies the skin, fighting acne-causing bacteria and preventing breakouts.
+    Why Your Skin Will Love It:
+    Dual-Action Formula:
+    Neem: Known for its antibacterial properties, it deeply detoxifies the skin, fighting acne-causing bacteria and preventing breakouts.
 
-Lime: Rich in Vitamin C, it acts as a natural bleaching agent to lighten dark spots, remove tan, and control excess oil.
+    Lime: Rich in Vitamin C, it acts as a natural bleaching agent to lighten dark spots, remove tan, and control excess oil.
 
-Visible Brightening: Helps fade pigmentation and blemishes, promoting a clearer and more even skin tone.
-Oil Control: The citrus extracts regulate sebum production, giving you a matte, shine-free finish perfect for daily wear.
-Clear & Healthy Glow: Unlike harsh creams that dry you out, this formula maintains skin health while delivering a radiant "whitening" effect.
+    Visible Brightening: Helps fade pigmentation and blemishes, promoting a clearer and more even skin tone.
+    Oil Control: The citrus extracts regulate sebum production, giving you a matte, shine-free finish perfect for daily wear.
+    Clear & Healthy Glow: Unlike harsh creams that dry you out, this formula maintains skin health while delivering a radiant "whitening" effect.
 
-Key Features:
-Volume: 50gm (Perfect for daily facial care)
+    Key Features:
+    Volume: 50gm (Perfect for daily facial care)
 Skin Type: Ideal for Oily, Acne-Prone, and Dull Skin
 Key Ingredients: Neem Extract & Lime (Citrus) Extract
 Benefit: Spot Reduction & Skin Brightening
 
 How to Use:
-Cleanse your face thoroughly with a face wash.
-Take a small amount of Devson cream on your fingertips.
-Dot it over your face and neck.
-Massage gently in upward circular motions until fully absorbed. Use twice daily for best results.`
-    },
-    {
-      id: 401, category: 'Skin Care', title: "VelSoft Glow Honey Almond Moisturising Body Lotion - 200ml", price: "₹80", moq: "1 pc", img: "https://images.unsplash.com/photo-1608248597279-f99d160bfbc8?auto=format&fit=crop&q=80&w=400",
-      discount: "BUY 1 GET 1 FREE", pricing: { mrp: 160, sample: 80, tiers: [{ qty: 1, price: 80, label: "B1G1 Deal" }] },
-      manufacturer: "Real Herbal Cosmetics",
-      address: "H136 Sector 5, Bawana Industrial Area, New Delhi-110039",
-      flashSale: true,
-      description: `VelSoft Glow Honey Almond Moisturising Body Lotion (200ml)
-Nature’s Sweetest Secret for Soft, Glowing Skin
-Wrap your skin in the luxurious embrace of VelSoft Glow Honey Almond. This rich formula combines the golden goodness of pure Honey with the deep-nourishing properties of Almond Oil. Designed for daily hydration, it restores your skin’s natural moisture barrier while leaving behind a subtle, sweet fragrance.
-
-Why Your Skin Will Love It:
-The Power of Honey: A natural humectant, honey draws moisture into the skin and locks it there, giving you a plump, dewy look and an instant "Glow."
-
-Almond Oil Nourishment: Rich in Vitamin E, almond oil softens rough texture and helps improve skin complexion, making it feel silky smooth.
-
-Deeply Soothing: Perfect for soothing tired or irritated skin, this blend provides comfort and essential hydration without feeling sticky.
-Lightweight & Absorbent: Despite its rich ingredients, the lotion absorbs quickly, allowing your skin to breathe while staying moisturized all day.
-
-Volume: 200ml (Mega Value Pack )
-Skin Type: Suitable for Normal to Dry Skin
-Key Ingredients: Honey Extract & Sweet Almond Oil
-Scent: Warm, Sweet, and Nutty
-
-How to Use:
-Dispense a generous amount from the bottle.
-Apply evenly all over the body, paying attention to dry areas like knees and elbows.
-Massage gently until fully absorbed to reveal soft, glowing skin.
-Get the golden glow of honey and the softness of almonds in one bottle.`
-    },
-    {
-      id: 402, category: 'Skin Care', title: "VelSoft Glow Honey Almond with Mix Fruit Moisturising Body Lotion - 200ml", price: "₹80", moq: "1 pc", img: "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&q=80&w=400",
-      discount: "BUY 1 GET 1 FREE", pricing: { mrp: 160, sample: 80, tiers: [{ qty: 1, price: 80, label: "B1G1 Deal" }] },
-      manufacturer: "Real Herbal Cosmetics",
-      address: "H136 Sector 5, Bawana Industrial Area, New Delhi-110039",
-      flashSale: true,
-      description: `The Ultimate Nutrient Blend for Healthy, Glowing Skin
-
-Why choose one benefit when you can have them all? VelSoft Glow brings you a unique fusion of nature's best skincare secrets in a single bottle. This multitasking formula combines the soothing richness of Honey and Almond with the revitalizing energy of Mixed Fruit extracts. It is designed to nourish, brighten, and hydrate deeply, giving your skin a vibrant and youthful glow.
-
-Why Your Skin Will Love It:
-Triple Action Formula:
-Honey: Draws moisture in to keep skin hydrated and plump.
-
-Almond Oil: Softens texture and nourishes deeply with Vitamin E.
-
-Mix Fruit Extracts: Packed with vitamins and antioxidants that refresh dull skin and boost radiance.
-Fruit-Powered Glow: The natural fruit acids gently exfoliate and brighten, while the honey creates that signature VelSoft luminous finish.
-Non-Greasy & Fresh: A perfectly balanced texture that feels rich going on but absorbs instantly, leaving no sticky residue—just soft, fresh-smelling skin.
-
-Vitality Boost: Recharges tired skin with essential vitamins, making it look healthier and more awake instantly.
-
-Key Features:
-Volume: 200ml (Perfect for daily personal use or travel)
-Skin Type: All Skin Types (especially Dull or Dehydrated skin)
-Key Ingredients: Honey, Sweet Almond Oil, Mixed Fruit Complex
-Scent: A delightful blend of sweet nutty notes and fresh fruity zest.
-
-How to Use:
-Pour a coin-sized amount into your palm.
-Massage gently into the skin after a shower, ensuring even coverage.
-Enjoy the fresh, fruity scent as your skin drinks up the moisture.
-Nourish with Almonds, Refresh with Fruit, Glow with VelSoft.`
-    },
-    {
-      id: 403, category: 'Skin Care', title: "VelSoft Glow Mix Fruit Moisturising Body Lotion - 600ml", price: "₹149", moq: "1 pc", img: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
-      pricing: { mrp: 450, sample: 149, tiers: [{ qty: 1, price: 149 }] },
-      manufacturer: "Real Herbal Cosmetics",
-      address: "H136 Sector 5, Bawana Industrial Area, New Delhi-110039",
-      flashSale: true,
-      description: `The Ultimate Nutrient Blend for Healthy, Glowing Skin
-
-Why choose one benefit when you can have them all? VelSoft Glow brings you a unique fusion of nature's best skincare secrets in a single bottle. This multitasking formula combines the soothing richness of Honey and Almond with the revitalizing energy of Mixed Fruit extracts. It is designed to nourish, brighten, and hydrate deeply, giving your skin a vibrant and youthful glow.
-
-Why Your Skin Will Love It:
-Triple Action Formula:
-Honey: Draws moisture in to keep skin hydrated and plump.
-
-Almond Oil: Softens texture and nourishes deeply with Vitamin E.
-
-Mix Fruit Extracts: Packed with vitamins and antioxidants that refresh dull skin and boost radiance.
-Fruit-Powered Glow: The natural fruit acids gently exfoliate and brighten, while the honey creates that signature VelSoft luminous finish.
-Non-Greasy & Fresh: A perfectly balanced texture that feels rich going on but absorbs instantly, leaving no sticky residue—just soft, fresh-smelling skin.
-
-Vitality Boost: Recharges tired skin with essential vitamins, making it look healthier and more awake instantly.
-
-Key Features:
-Volume: 600ml (Perfect for daily personal use or travel)
-Skin Type: All Skin Types (especially Dull or Dehydrated skin)
-Key Ingredients: Honey, Sweet Almond Oil, Mixed Fruit Complex
-Scent: A delightful blend of sweet nutty notes and fresh fruity zest.
-
-How to Use:
-Pour a coin-sized amount into your palm.
-Massage gently into the skin after a shower, ensuring even coverage.
-Enjoy the fresh, fruity scent as your skin drinks up the moisture.
-Nourish with Almonds, Refresh with Fruit, Glow with VelSoft.`
-    },
-    {
-      id: 404, category: 'Skin Care', title: "VelSoft Glow Honey Almond Moisturising Body Lotion - 600ml", price: "₹149", moq: "1 pc", img: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&q=80&w=400",
-      pricing: { mrp: 450, sample: 149, tiers: [{ qty: 1, price: 149 }] },
-      manufacturer: "Real Herbal Cosmetics",
-      address: "H136 Sector 5, Bawana Industrial Area, New Delhi-110039",
-      flashSale: true,
-      description: `Nature’s Sweetest Secret for Soft, Glowing Skin
-
+    Cleanse your face thoroughly with a face wash.
+    Take a small amount of Devson cream on your fingertips.
+    Dot it over your face and neck.
+    Massage gently in
 Wrap your skin in the luxurious embrace of VelSoft Glow Honey Almond. This rich formula combines the golden goodness of pure Honey with the deep-nourishing properties of Almond Oil. Designed for daily hydration, it restores your skin’s natural moisture barrier while leaving behind a subtle, sweet fragrance. The large 600ml bottle ensures you have long-lasting care for the whole family.
 
-Why Your Skin Will Love It:
-The Power of Honey: A natural humectant, honey draws moisture into the skin and locks it there, giving you a plump, dewy look and an instant "Glow."
+    Why Your Skin Will Love It:
+    The Power of Honey: A natural humectant, honey draws moisture into the skin and locks it there, giving you a plump, dewy look and an instant "Glow."
 
 Almond Oil Nourishment: Rich in Vitamin E, almond oil softens rough texture and helps improve skin complexion, making it feel silky smooth.
 
-Deeply Soothing: Perfect for soothing tired or irritated skin, this blend provides comfort and essential hydration without feeling sticky.
-Lightweight & Absorbent: Despite its rich ingredients, the lotion absorbs quickly, allowing your skin to breathe while staying moisturized all day.
-Family Value Size: The generous 600ml volume offers excellent value, ensuring you never run out of your daily skincare staple.
+    Deeply Soothing: Perfect for soothing tired or irritated skin, this blend provides comfort and essential hydration without feeling sticky.
+    Lightweight & Absorbent: Despite its rich ingredients, the lotion absorbs quickly, allowing your skin to breathe while staying moisturized all day.
+    Family Value Size: The generous 600ml volume offers excellent value, ensuring you never run out of your daily skincare staple.
 
-Key Features:
-Volume: 600ml (Mega Value Pack / Family Size)
+    Key Features:
+    Volume: 600ml (Mega Value Pack / Family Size)
 Skin Type: Suitable for Normal to Dry Skin
 Key Ingredients: Honey Extract & Sweet Almond Oil
 Scent: Warm, Sweet, and Nutty
 
 How to Use:
-Dispense a generous amount from the bottle.
-Apply evenly all over the body, paying attention to dry areas like knees and elbows.
-Massage gently until fully absorbed to reveal soft, glowing skin.
-Get the golden glow of honey and the softness of almonds in one bottle.`
+    Dispense a generous amount from the bottle.
+    Apply evenly all over the body, paying attention to dry areas like knees and elbows.
+    Massage gently until fully absorbed to reveal soft, glowing skin.
+    Get the golden glow of honey and the softness of almonds in one bottle.`
     },
 
     // Oral Care Items
     { 
-      id: 105, category: 'Oral Care', title: "Devson Clovegel Herbal Toothpaste - 150gm", price: "₹45", moq: "12 pcs", img: "https://images.unsplash.com/photo-1559599101-f09722fb4948?auto=format&fit=crop&q=80&w=400",
+      id: 105, category: 'Oral Care', title: "Devson Clovegel Herbal Toothpaste - 150gm", price: "₹45", moq: "12 pcs", img: "/assets/cataloges/herbal%20toothpaste/1.jpg",
       source: "Direct from Wholeseller",
       manufacturer: "Devayush Enterprise",
       address: "Near Rohini Sector 24, New Delhi-110042",
@@ -246,31 +248,31 @@ Get the golden glow of honey and the softness of almonds in one bottle.`
 
 Protect your smile with the trusted strength of nature. Devson Clovegel Herbal Toothpaste is a unique formulation that brings you the legendary benefits of Clove (Laung) in a refreshing gel format. Known for centuries as nature’s dentist, the clove oil in this toothpaste fights bacteria, relieves sensitivity, and ensures your teeth and gums stay strong and healthy.
 
-Why Your Smile Will Love It:
-Instant Relief: Rich in Eugenol (the active component of clove), it helps soothe toothaches and reduces gum sensitivity effectively.
+    Why Your Smile Will Love It:
+    Instant Relief: Rich in Eugenol (the active component of clove), it helps soothe toothaches and reduces gum sensitivity effectively.
 
-Powerful Germ Protection: The antibacterial properties of clove actively fight germs and bacteria in the hard-to-reach areas of your mouth, preventing cavities and plaque buildup.
+    Powerful Germ Protection: The antibacterial properties of clove actively fight germs and bacteria in the hard-to-reach areas of your mouth, preventing cavities and plaque buildup.
 
-Healthy Gums: Regular use helps tighten gums and prevents bleeding or inflammation, promoting overall periodontal health.
+    Healthy Gums: Regular use helps tighten gums and prevents bleeding or inflammation, promoting overall periodontal health.
 
-Herbal Freshness: Unlike synthetic flavors, Clovegel leaves your mouth feeling naturally fresh and clean, combating bad breath at the source.
-Gel Formula: A smooth, non-abrasive gel that cleans teeth gently without wearing down the enamel.
+    Herbal Freshness: Unlike synthetic flavors, Clovegel leaves your mouth feeling naturally fresh and clean, combating bad breath at the source.
+    Gel Formula: A smooth, non-abrasive gel that cleans teeth gently without wearing down the enamel.
 
-Key Features:
-Weight: 150gm (Long-lasting Family Pack)
+    Key Features:
+    Weight: 150gm (Long-lasting Family Pack)
 Type: Herbal Gel Toothpaste
 Key Ingredient: Natural Clove Oil
 Primary Benefit: Cavity Protection & Toothache Relief
 
 How to Use:
-Squeeze a pea-sized amount of Clovegel onto your toothbrush.
-Brush thoroughly for at least two minutes, covering all surfaces of the teeth and gums.
-Rinse with water.
-For best results, use twice daily—morning and night.
-Stronger teeth, healthier gums, and the confidence of a natural smile with Devson.`
+    Squeeze a pea-sized amount of Clovegel onto your toothbrush.
+    Brush thoroughly for at least two minutes, covering all surfaces of the teeth and gums.
+    Rinse with water.
+    For best results, use twice daily—morning and night.
+    Stronger teeth, healthier gums, and the confidence of a natural smile with Devson.`
     },
     {
-      id: 205, category: 'Oral Care', title: "Devson Care Red Paste - 110g", price: "₹55", moq: "12 pcs", img: "https://images.unsplash.com/photo-1559599101-f09722fb4948?auto=format&fit=crop&q=80&w=400",
+      id: 205, category: 'Oral Care', title: "Devson Care Red Paste - 110g", price: "₹55", moq: "12 pcs", img: "/assets/cataloges/red%20paste/1.jpg",
       source: "Direct from Wholeseller",
       manufacturer: "Devayush Enterprise",
       address: "Near Rohini Sector 24, New Delhi-110042",
@@ -279,27 +281,27 @@ Stronger teeth, healthier gums, and the confidence of a natural smile with Devso
 
 Rediscover the power of nature with Devson Care Red Paste. Formulated with a potent blend of time-tested Ayurvedic ingredients, this classic red toothpaste is designed for those who prioritize strong teeth and healthy gums. It combines the efficacy of traditional herbs with modern oral care standards to deliver a deep clean that you can feel.
 
-Why Your Smile Will Love It:
-Total Gum Care: Specifically formulated to tighten gums and reduce issues like bleeding and inflammation, ensuring the foundation of your teeth remains healthy.
+    Why Your Smile Will Love It:
+    Total Gum Care: Specifically formulated to tighten gums and reduce issues like bleeding and inflammation, ensuring the foundation of your teeth remains healthy.
 
-Fight Germs & Bacteria: Packed with natural antibacterial herbs, it actively fights the germs that cause cavities, plaque, and tooth decay.
+    Fight Germs & Bacteria: Packed with natural antibacterial herbs, it actively fights the germs that cause cavities, plaque, and tooth decay.
 
-Long-Lasting Freshness: The unique spicy-herbal flavor leaves your mouth feeling zingy and fresh for hours, effectively eliminating bad breath.
-Stronger Roots: Regular use helps fortify tooth enamel and strengthens the roots, making your teeth resilient against sensitivity and wear.
-Natural Cleaning: Gently polishes teeth to remove surface stains and yellowing without damaging the enamel.
+    Long-Lasting Freshness: The unique spicy-herbal flavor leaves your mouth feeling zingy and fresh for hours, effectively eliminating bad breath.
+    Stronger Roots: Regular use helps fortify tooth enamel and strengthens the roots, making your teeth resilient against sensitivity and wear.
+    Natural Cleaning: Gently polishes teeth to remove surface stains and yellowing without damaging the enamel.
 
-Key Features:
-Weight: 110g (Convenient Everyday Pack)
+    Key Features:
+    Weight: 110g (Convenient Everyday Pack)
 Type: Traditional Red Herbal Paste
 Key Action: Gum Tightening & Cavity Protection
 Flavor Profile: Refreshing Spicy Herbal
 
 How to Use:
-Apply a liberal amount of Devson Care Red Paste to your toothbrush.
-Brush thoroughly, massaging the gums and cleaning the teeth for 2-3 minutes.
-Rinse with water.
-Use twice a day for a healthy, problem-free smile.
-The strength of tradition for a confident, healthy smile.`
+    Apply a liberal amount of Devson Care Red Paste to your toothbrush.
+    Brush thoroughly, massaging the gums and cleaning the teeth for 2-3 minutes.
+    Rinse with water.
+    Use twice a day for a healthy, problem-free smile.
+    The strength of tradition for a confident, healthy smile.`
     },
     {
       id: '402b', category: 'Oral Care', title: "Devson Care Smily 24 Toothpaste with Free Brush", price: "₹55", moq: "12 pcs", img: "https://images.unsplash.com/photo-1559599101-f09722fb4948?auto=format&fit=crop&q=80&w=400",
@@ -325,55 +327,55 @@ The strength of tradition for a confident, healthy smile.`
 
 const Styles = () => (
     <style dangerouslySetInnerHTML={{__html: `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-    
-    :root {
-      --primary: #f26c0d;
-      --bg-light: #f8f7f5;
-      --bg-dark: #221710;
-      --surface-dark: #2d211a;
-      --surface-light: #ffffff;
-    }
-    
-    .text-primary { color: var(--primary); }
-    .bg-primary { background-color: var(--primary); }
-    .border-primary { border-color: var(--primary); }
-    .ring-primary { --tw-ring-color: var(--primary); }
-    .shadow-primary\/20 { --tw-shadow-color: rgba(242, 108, 13, 0.2); }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+:root {
+    --primary: #f26c0d;
+    --bg-light: #f8f7f5;
+    --bg-dark: #221710;
+    --surface-dark: #2d211a;
+    --surface-light: #ffffff;
+}
+
+.text-primary { color: var(--primary); }
+.bg-primary { background-color: var(--primary); }
+.border-primary { border-color: var(--primary); }
+.ring-primary { --tw-ring-color: var(--primary); }
+.shadow-primary\/20 { --tw-shadow-color: rgba(242, 108, 13, 0.2); }
     .shadow-primary\/30 { --tw-shadow-color: rgba(242, 108, 13, 0.3); }
     .shadow-primary\/40 { --tw-shadow-color: rgba(242, 108, 13, 0.4); }
     .fill-primary { fill: var(--primary); }
-    
-    .bg-primary\/5 { background-color: rgba(242, 108, 13, 0.05); }
+
+.bg-primary\/5 { background-color: rgba(242, 108, 13, 0.05); }
     .bg-primary\/10 { background-color: rgba(242, 108, 13, 0.1); }
     .bg-primary\/20 { background-color: rgba(242, 108, 13, 0.2); }
     .border-primary\/10 { border-color: rgba(242, 108, 13, 0.1); }
     .border-primary\/20 { border-color: rgba(242, 108, 13, 0.2); }
     .border-primary\/30 { border-color: rgba(242, 108, 13, 0.3); }
     .border-primary\/50 { border-color: rgba(242, 108, 13, 0.5); }
-    
-    .hover\:bg-primary:hover { background-color: var(--primary); }
-    .hover\:text-primary:hover { color: var(--primary); }
-    .hover\:border-primary:hover { border-color: var(--primary); }
-    .group-hover\:text-primary:hover { color: var(--primary); }
-    .focus\:ring-primary:focus { --tw-ring-color: var(--primary); }
-    .focus\:border-primary:focus { border-color: var(--primary); }
 
-    .bg-background-light { background-color: var(--bg-light); }
-    .font-display { font-family: 'Inter', sans-serif; }
-    
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .animate-in { animation-fill-mode: forwards; }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
-    
+    .hover\:bg-primary:hover { background-color: var(--primary); }
+.hover\:text-primary:hover { color: var(--primary); }
+.hover\:border-primary:hover { border-color: var(--primary); }
+.group-hover\:text-primary:hover { color: var(--primary); }
+.focus\:ring-primary:focus { --tw-ring-color: var(--primary); }
+.focus\:border-primary:focus { border-color: var(--primary); }
+
+.bg-background-light { background-color: var(--bg-light); }
+.font-display { font-family: 'Inter', sans-serif; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-in { animation-fill-mode: forwards; }
+.fade-in { animation: fadeIn 0.3s ease-out; }
+
     ::selection { background-color: rgba(242, 108, 13, 0.3); color: var(--primary); }
-    `}} />
+`}} />
 );
 
 const NexisLogo = () => (
@@ -974,7 +976,7 @@ const ProductModal = ({ product, onClose, onAddToCart }) => {
         <div className="w-full md:w-1/2 bg-gray-50 relative min-h-[300px] md:min-h-full">
           <img src={product.img} className="absolute inset-0 w-full h-full object-contain p-8" />
           <div className="absolute top-6 left-6 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-            <span className="material-symbols-outlined text-[16px]">verified</span>
+            <span className="material-symbols-outlined text-[12px]">verified</span>
             {product.source || "Direct from Manufacturer"}
           </div>
         </div>
@@ -1203,7 +1205,7 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
 
       <section>
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold flex items-center gap-2 text-gray-900">
+          <h3 className="text-2xl font-bold flex items-center gap-2 mb-2 text-gray-900">
             <span className="material-symbols-outlined text-red-500 fill-current">local_fire_department</span> Top Selling
           </h3>
           <button className="text-sm text-primary font-bold hover:underline" onClick={() => navigate('wholesale')}>View All Collection</button>
@@ -1333,15 +1335,15 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
                 {p.discount || getDiscount(p.price, p.pricing.mrp)}
               </div>
               <div className="aspect-[4/3] overflow-hidden bg-gray-50">
-                <img src={p.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={p.img} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-3">
                 <h4 className="text-sm font-bold text-gray-900 leading-snug mb-1">{p.title}</h4>
                 <div className="flex items-end gap-2 mt-1">
                   <span className="text-lg font-bold text-gray-900">{p.price}</span>
-                  <span className="text-xs text-gray-400 line-through mb-1">₹{p.pricing.mrp}</span>
+                  <span className="text-sm text-gray-400 line-through font-normal">₹{p.pricing.mrp}</span>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); onAddToCart(p); }} className="w-full mt-3 py-2 bg-gray-900 text-white text-xs font-bold rounded-lg hover:bg-primary transition-colors">
+                <button onClick={(e) => { e.stopPropagation(); onAddToCart(p); }} className="w-full mt-3 py-2 bg-gray-900 text-white text-xs font-bold rounded-lg hover:bg-black transition-colors">
                   Add to Cart
                 </button>
               </div>
@@ -1369,7 +1371,31 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
                 oldPrice: "₹110", 
                 sold: "45%", 
                 img: "https://images.unsplash.com/photo-1559599101-f09722fb4948?auto=format&fit=crop&q=80&w=400",
-                description: `Traditional Herbal Strength for Rock-Solid Teeth...`, // Keeping description
+                description: `Traditional Herbal Strength for Rock-Solid Teeth
+
+Rediscover the power of nature with Devson Care Red Paste. Formulated with a potent blend of time-tested Ayurvedic ingredients, this classic red toothpaste is designed for those who prioritize strong teeth and healthy gums. It combines the efficacy of traditional herbs with modern oral care standards to deliver a deep clean that you can feel.
+
+    Why Your Smile Will Love It:
+    Total Gum Care: Specifically formulated to tighten gums and reduce issues like bleeding and inflammation, ensuring the foundation of your teeth remains healthy.
+
+    Fight Germs & Bacteria: Packed with natural antibacterial herbs, it actively fights the germs that cause cavities, plaque, and tooth decay.
+
+    Long-Lasting Freshness: The unique spicy-herbal flavor leaves your mouth feeling zingy and fresh for hours, effectively eliminating bad breath.
+    Stronger Roots: Regular use helps fortify tooth enamel and strengthens the roots, making your teeth resilient against sensitivity and wear.
+    Natural Cleaning: Gently polishes teeth to remove surface stains and yellowing without damaging the enamel.
+
+    Key Features:
+    Weight: 110g (Convenient Everyday Pack)
+Type: Traditional Red Herbal Paste
+Key Action: Gum Tightening & Cavity Protection
+Flavor Profile: Refreshing Spicy Herbal
+
+How to Use:
+    Apply a liberal amount of Devson Care Red Paste to your toothbrush.
+    Brush thoroughly, massaging the gums and cleaning the teeth for 2-3 minutes.
+    Rinse with water.
+    Use twice a day for a healthy, problem-free smile.
+    The strength of tradition for a confident, healthy smile.`, // Keeping description
                 manufacturer: "Devayush Enterprise",
                 address: "Near Rohini Sector 24, New Delhi-110042",
                 source: "Direct from Wholeseller",
@@ -1396,37 +1422,16 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
               </div>
               <div className="space-y-2">
                 <h4 className="text-sm font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{p.title}</h4>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-red-600">{p.price}</span>
-                  <span className="text-sm text-gray-400 line-through font-normal">{p.oldPrice}</span>
+                <div className="flex items-end gap-2 mt-1">
+                  <span className="text-lg font-bold text-gray-900">{p.price} <span className="text-xs font-normal text-gray-400">/ unit</span></span>
+                  <span className="text-sm text-gray-400 line-through font-normal">₹{p.pricing.mrp}</span>
                 </div>
-
-                {p.pricing && p.pricing.sample && (
-                    <div className="flex justify-between items-center py-2 border-y border-gray-50 my-1">
-                        <div className="flex flex-col">
-                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Sample</span>
-                           <span className="text-xs font-bold text-gray-900">₹{p.pricing.sample}</span>
-                       </div>
-                       <button 
-                            onClick={(e) => { 
-                                e.stopPropagation(); 
-                                onAddToCart({ ...p, price: `₹${p.pricing.sample}`, moq: `1 pc`, title: `${p.title} (Sample)` }); 
-                            }}
-                            className="text-[10px] font-bold text-primary bg-primary/5 hover:bg-primary hover:text-white px-3 py-1.5 rounded-lg border border-primary/10 transition-all flex items-center gap-1"
-                       >
-                           <span className="material-symbols-outlined text-[14px]">science</span> Add
-                       </button>
-                    </div>
-                )}
-
-                <div className="pt-2">
-                  <div className="flex justify-between text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">
-                    <span>Stock Intensity</span>
-                    <span>{p.sold} Claimed</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-red-500 h-full transition-all duration-1000" style={{ width: p.sold }}></div>
-                  </div>
+                <div className="flex justify-between text-[10px] text-gray-500 font-medium">
+                  <span>Stock Intensity</span>
+                  <span>{p.sold} Claimed</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-red-500 h-full transition-all duration-1000" style={{ width: p.sold }}></div>
                 </div>
               </div>
             </div>
@@ -1436,7 +1441,6 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
     </main>
     <Footer />
   </div>
-  );
 };
 
 const WholesaleScreen = ({ navigate, onAddToCart, cartCount, onProductClick, user, onLoginClick, onCartClick }) => {
@@ -1484,7 +1488,7 @@ const WholesaleScreen = ({ navigate, onAddToCart, cartCount, onProductClick, use
                    <input 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="block w-full md:rounded-l-none rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none" 
+                    className="block w-full md:rounded-l-none rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-20 text-sm text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary shadow-sm focus:outline-none" 
                     placeholder="Search wholesale products, brands..." 
                     type="text" 
                   />
@@ -1574,7 +1578,7 @@ const WholesaleScreen = ({ navigate, onAddToCart, cartCount, onProductClick, use
                         const isWholesaler = p.source === "Direct from Wholeseller";
 
                         return (
-                        <div key={p.id} onClick={() => onProductClick(p)} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all group cursor-pointer flex flex-col h-full relative">
+                        <div key={p.id} onClick={() => onProductClick(p)} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all cursor-pointer flex flex-col h-full relative">
                             <div className="absolute top-2 left-2 flex flex-col gap-1 z-20 items-start">
                                 {p.outOfStock ? (
                                     <span className="bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">Out of Stock</span>
@@ -1591,7 +1595,7 @@ const WholesaleScreen = ({ navigate, onAddToCart, cartCount, onProductClick, use
                                 )}
                             </div>
 
-                            <div className="relative aspect-[1.1] bg-white p-4 border-b border-gray-50">
+                            <div className="relative aspect-[1.1] bg-gray-50 p-4 border-b border-gray-50">
                                 <img src={p.img} className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-500 ${p.outOfStock ? 'grayscale opacity-50' : 'group-hover:scale-105'}`} />
                                 <button onClick={(e) => { e.stopPropagation(); onProductClick(p); }} className="absolute bottom-2 right-2 size-8 bg-white rounded-full flex items-center justify-center text-primary shadow border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gray-50">
                                     <span className="material-symbols-outlined text-[18px]">visibility</span>
@@ -1629,7 +1633,7 @@ const WholesaleScreen = ({ navigate, onAddToCart, cartCount, onProductClick, use
 
                                         <div className="flex justify-between items-end">
                                             <div>
-                                                <span className="block text-[9px] text-gray-400 font-bold uppercase">Wholesale Price</span>
+                                                <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider">Wholesale Price</span>
                                                 <div className="flex items-baseline gap-1">
                                                     <span className={`text-lg font-bold ${p.outOfStock ? 'text-gray-400' : 'text-primary'}`}>{p.price}</span>
                                                     <span className="text-[10px] text-gray-400 font-medium">/pc</span>
@@ -1699,7 +1703,7 @@ const ManufacturingScreen = ({ navigate, cartCount, onStartChat, user, onLoginCl
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                   <span className="material-symbols-outlined text-[24px]">search</span>
                 </span>
-                <input className="w-full pl-12 pr-12 py-3 rounded-full bg-gray-100 border-none shadow-sm text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Search manufacturers, factory specialties, or certifications..." />
+                <input className="w-full pl-12 pr-12 py-3 rounded-full bg-gray-100 border border-gray-200 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Search manufacturers, factory specialties, or certifications..." />
                 <button className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary">
                   <span className="material-symbols-outlined text-[24px]">tune</span>
                 </button>
@@ -1720,8 +1724,8 @@ const ManufacturingScreen = ({ navigate, cartCount, onStartChat, user, onLoginCl
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {[{ icon: "sanitizer", label: "Skin Care" }, { icon: "spa", label: "Hair Care" }, { icon: "face_3", label: "Cosmetics" }, { icon: "eco", label: "Organic" }, { icon: "science", label: "Labs" }, { icon: "package_2", label: "Packaging" }].map((cat, i) => (
                 <div key={i} className="flex flex-col items-center p-6 rounded-3xl bg-white border border-gray-100 cursor-pointer group hover:border-primary transition-all shadow-sm">
-                  <div className="size-20 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center text-primary transition-transform group-hover:scale-110 mb-4">
-                    <span className="material-symbols-outlined text-[36px]">{cat.icon}</span>
+                  <div className="size-20 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                    <span className="material-symbols-outlined text-[48px]">{cat.icon}</span>
                   </div>
                   <span className="text-sm font-bold text-gray-800 leading-tight">{cat.label}</span>
                 </div>
@@ -1738,7 +1742,7 @@ const ManufacturingScreen = ({ navigate, cartCount, onStartChat, user, onLoginCl
               {/* Real Herbal Cosmetics Card */}
               <div 
                 onClick={() => setSelectedFactory(realHerbalData)}
-                className="bg-white rounded-3xl p-8 border-2 border-primary/20 shadow-xl shadow-primary/5 hover:shadow-2xl transition-all relative overflow-hidden group cursor-pointer"
+                className="bg-white rounded-2xl p-8 border-2 border-primary/20 shadow-xl shadow-primary/5 hover:shadow-2xl transition-all relative overflow-hidden group cursor-pointer"
               >
                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full -mr-8 -mt-8 transition-all group-hover:bg-primary/20"></div>
                    <div className="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-sm z-10 flex items-center gap-1">
@@ -1748,28 +1752,37 @@ const ManufacturingScreen = ({ navigate, cartCount, onStartChat, user, onLoginCl
                    <div className="flex items-start gap-6 mb-6 relative z-10">
                      <div className="size-24 rounded-2xl bg-white border border-gray-200 flex flex-col items-center justify-center text-center shadow-md p-2 group-hover:border-primary transition-colors">
                        <span className="material-symbols-outlined text-primary text-[32px]">spa</span>
-                       <span className="text-[9px] font-bold text-gray-900 leading-none mt-1 uppercase">Real Herbal<br/>Cosmetics</span>
+                       <span className="text-[8px] font-bold uppercase text-gray-900 leading-tight mt-1">Real Herbal<br/>Cosmetics</span>
                      </div>
                      <div className="flex-1 min-w-0">
                        <div className="flex justify-between items-start">
-                         <h3 className="font-bold text-xl truncate pr-2 text-gray-900">Real Herbal Cosmetics</h3>
+                         <h3 className="font-bold text-xl truncate pr-2 text-gray-900">{factory.name}</h3>
                        </div>
-                       <p className="text-xs font-medium text-gray-500 mt-1 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">location_on</span> H136 Sector 5, Bawana Industrial Area, Delhi
+                       <p className="text-gray-500 flex items-center gap-2 text-sm">
+                            <span className="material-symbols-outlined text-[16px]">location_on</span>
+                            {factory.address}
                        </p>
-                       <p className="text-sm text-gray-600 mt-3 line-clamp-2 leading-relaxed">
-                           Specializing in customizable herbal toothpaste, body lotions, and hair care. Full 3rd party labeling services.
-                       </p>
-                       <div className="flex flex-wrap gap-2 mt-4">
-                         {["MOQ: 10,000", "Custom Labels", "Private Label", "GMP"].map(tag => <span key={tag} className="text-[10px] text-gray-700 bg-orange-50 px-3 py-1 rounded-full font-bold border border-orange-100">{tag}</span>)}
-                       </div>
                      </div>
+                     <div className="flex gap-3">
+                                <button 
+                                    onClick={() => {
+                                        onChat(factory.name);
+                                        onClose();
+                                    }}
+                                    className="px-6 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined">chat_bubble</span> Chat
+                                </button>
+                                <button className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-primary/20 flex items-center gap-2">
+                                    <span className="material-symbols-outlined">send</span> Send Inquiry
+                                </button>
+                            </div>
                    </div>
                    <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-50">
                      <button className="py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-2xl border border-gray-200 transition-colors flex items-center justify-center gap-2">
                        <span className="material-symbols-outlined text-[18px]">play_circle</span> Watch Video
                      </button>
-                     <button className="py-3 text-sm font-bold text-white bg-primary hover:bg-orange-600 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]">
+                     <button className="py-3 text-sm font-bold text-white bg-primary hover:bg-orange-600 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
                        View Full Profile
                      </button>
                    </div>
@@ -1779,7 +1792,7 @@ const ManufacturingScreen = ({ navigate, cartCount, onStartChat, user, onLoginCl
               {[
                 { name: "Zenith Packaging Sol.", rating: "4.7", desc: "Sustainable glass and recycled plastic packaging for personal care brands. Specializing in high-end cosmetic containers and eco-friendly dispensers.", tags: ["MOQ: 5000pcs", "Custom Molds", "Recyclable", "FDA Registered"], icon: "water_drop" }
               ].map((m, i) => (
-                <div key={i} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group opacity-80 hover:opacity-100">
+                <div key={i} className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group opacity-80 hover:opacity-100">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -mr-8 -mt-8 transition-all group-hover:bg-gray-100"></div>
                    <div className="flex items-start gap-6 mb-6 relative z-10">
                      <div className="size-20 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
@@ -1802,7 +1815,7 @@ const ManufacturingScreen = ({ navigate, cartCount, onStartChat, user, onLoginCl
                      <button className="py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-2xl border border-gray-200 transition-colors flex items-center justify-center gap-2">
                        View Full Profile
                      </button>
-                     <button onClick={() => navigate('rfq')} className="py-3 text-sm font-bold text-white bg-gray-900 hover:bg-black rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-[1.02]">
+                     <button onClick={() => navigate('rfq')} className="py-3 text-sm font-bold text-white bg-gray-900 hover:bg-black rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
                        Send Custom RFQ
                      </button>
                    </div>
@@ -1972,8 +1985,8 @@ const RFQScreen = ({ navigate }) => {
           </section>
 
           <div className="bg-primary/5 rounded-3xl p-10 border-2 border-dashed border-primary/20 flex flex-col items-center text-center gap-4 hover:bg-primary/10 transition-colors cursor-pointer group">
-            <div className="size-16 rounded-full bg-white flex items-center justify-center text-primary border border-primary/10 shadow-lg group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+            <div className="size-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-gray-400 text-3xl">cloud_upload</span>
             </div>
             <div>
               <p className="font-bold text-xl text-gray-900">Upload Product Design Files</p>
@@ -1999,7 +2012,7 @@ const RFQScreen = ({ navigate }) => {
                  <span className="font-bold text-gray-900">Standard (30d)</span>
                </div>
             </div>
-            <button className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/20 hover:bg-orange-600 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+            <button className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/30 hover:bg-orange-600 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
               <span>Submit RFQ</span>
               <span className="material-symbols-outlined text-xl">send</span>
             </button>
@@ -2078,8 +2091,8 @@ const MessengerScreen = ({ navigate, initialChatId }) => {
         {/* Sidebar List */}
         <div className={`w-full md:w-80 bg-white border-r border-gray-200 flex flex-col ${activeChatId ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-4 border-b border-gray-100 flex items-center gap-2 bg-gray-50/50">
-                <button onClick={() => navigate('home')} className="p-2 -ml-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors">
-                    <span className="material-symbols-outlined">arrow_back</span>
+                <button onClick={() => navigate('home')} className="p-2 -ml-2 rounded-full hover:bg-gray-200 transition-colors">
+                    <span className="material-symbols-outlined text-gray-900 text-[28px]">arrow_back</span>
                 </button>
                 <h2 className="font-bold text-lg text-gray-900 flex-1">Messages</h2>
                 <button className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
@@ -2163,7 +2176,7 @@ const MessengerScreen = ({ navigate, initialChatId }) => {
                                 placeholder="Type your message..." 
                                 className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-gray-900 placeholder-gray-500"
                             />
-                            <button onClick={handleSendMessage} disabled={!input.trim()} className="p-2 bg-primary text-white rounded-xl shadow-md hover:bg-orange-600 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95">
+                            <button onClick={handleSendMessage} disabled={!input.trim()} className="p-2 bg-primary text-white rounded-xl shadow-md hover:bg-orange-600 disabled:opacity-50 transition-all active:scale-95">
                                 <span className="material-symbols-outlined">send</span>
                             </button>
                         </div>
@@ -2210,7 +2223,7 @@ const CartOverlay = ({ cart, onClose, onRemove, isOpen }) => {
             </div>
           ) : (
             cart.map((item, i) => (
-              <div key={`${item.id}-${i}`} className="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
+              <div key={`${item.id}-${i}`} className="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:shadow-md transition-shadow">
                 <div className="size-20 rounded-xl bg-white border border-gray-200 shrink-0 overflow-hidden">
                   <img src={item.img} className="w-full h-full object-contain group-hover:scale-110 transition-transform" />
                 </div>
@@ -2232,7 +2245,7 @@ const CartOverlay = ({ cart, onClose, onRemove, isOpen }) => {
             <span className="text-primary">₹{subtotal.toLocaleString()}</span>
           </div>
           <p className="text-[10px] text-gray-400 text-center italic">Final logistics and duties calculated at checkout.</p>
-          <button className="w-full py-5 bg-primary text-white font-bold rounded-2xl shadow-2xl shadow-primary/30 hover:bg-orange-600 transition-all disabled:opacity-50 disabled:bg-gray-200 flex items-center justify-center gap-2 text-lg active:scale-95" disabled={cart.length === 0}>
+          <button className="w-full py-5 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/30 hover:bg-orange-600 transition-all disabled:opacity-50 disabled:bg-gray-200 flex items-center justify-center gap-2 text-lg active:scale-95" disabled={cart.length === 0}>
             Proceed to Checkout
           </button>
         </div>
@@ -2287,7 +2300,7 @@ const AccountScreen = ({ navigate }) => {
   return (
   <div className="flex-1 w-full animate-in fade-in duration-300">
     <header className="p-8 pb-4 max-w-7xl mx-auto">
-      <button onClick={() => navigate('home')} className="mb-8 p-3 bg-gray-50 rounded-full text-gray-900 hover:bg-gray-100 transition-colors border border-gray-200">
+      <button onClick={() => navigate('home')} className="mb-8 p-3 bg-gray-50 rounded-full text-gray-900 hover:bg-gray-100 transition-colors">
         <span className="material-symbols-outlined text-[28px]">arrow_back</span>
       </button>
       <div className="flex items-center gap-8 mb-10">
@@ -2303,7 +2316,7 @@ const AccountScreen = ({ navigate }) => {
           <p className="text-sm text-gray-500">{user.email}</p>
           <div className="flex items-center gap-3 mt-2">
             <span className="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider border border-green-200">
-              <span className="material-symbols-outlined text-[14px] fill-current">verified</span> Verified Buyer
+              <span className="material-symbols-outlined text-[12px] fill-current">verified</span> Verified Buyer
             </span>
             <p className="text-gray-400 text-sm font-medium">Member since Oct 2023</p>
           </div>
