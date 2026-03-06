@@ -12,43 +12,28 @@ const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { spawn } = require('child_process');
-const { PrismaClient } = require('@prisma/client');
-const shiprocket = require('./shiprocket');
+const { execSync } = require('child_process');
 
-// Generate Prisma client if needed
-function generatePrismaClient() {
-  return new Promise((resolve) => {
-    try {
-      const prismaGenerate = spawn('npx', ['prisma', 'generate'], {
-        cwd: process.cwd(),
-        stdio: 'pipe'
-      });
-      
-      prismaGenerate.on('close', (code) => {
-        console.log('Prisma generate completed with code:', code);
-        resolve();
-      });
-      
-      prismaGenerate.on('error', (err) => {
-        console.log('Prisma generate skipped (may already exist):', err.message);
-        resolve();
-      });
-      
-      setTimeout(resolve, 5000); // Timeout after 5 seconds
-    } catch (err) {
-      console.log('Could not generate Prisma:', err.message);
-      resolve();
-    }
-  });
-}
-
+// Initialize Prisma with generation safeguard
 let prisma;
-
-async function initializePrisma() {
-  await generatePrismaClient();
+try {
+  // First, ensure Prisma client is generated
+  try {
+    execSync('npx prisma generate', { stdio: 'inherit', cwd: process.cwd() });
+  } catch (err) {
+    console.log('Prisma generation attempted (may already exist)');
+  }
+  
+  // Now import and initialize
+  const { PrismaClient } = require('@prisma/client');
   prisma = new PrismaClient();
+  console.log('✅ Prisma Client initialized successfully');
+} catch (err) {
+  console.error('❌ Prisma initialization error:', err.message);
+  process.exit(1);
 }
+
+const shiprocket = require('./shiprocket');
 
 // --- HSN & GST CONFIGURATION ---
 const HSN_RATES = {
@@ -1210,21 +1195,18 @@ async function testDatabase() {
 }
 
 // Start Server
-(async () => {
-  await initializePrisma();
-  
-  app.listen(PORT, '0.0.0.0', async () => {
-    console.log(`Nekxuz Server running on port ${PORT}`);
-    console.log(`Listening on http://0.0.0.0:${PORT}`);
-    console.log(`🗄️ Database: PostgreSQL (from Render)`);
-    if (process.env.RAZORPAY_KEY_ID) {
-       console.log(`Razorpay Key Loaded: ${process.env.RAZORPAY_KEY_ID.substring(0, 8)}...`);
-    }
-  
+// Start Server
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`Nekxuz Server running on port ${PORT}`);
+  console.log(`Listening on http://0.0.0.0:${PORT}`);
+  console.log(`🗄️ Database: PostgreSQL (from Render)`);
+  if (process.env.RAZORPAY_KEY_ID) {
+     console.log(`Razorpay Key Loaded: ${process.env.RAZORPAY_KEY_ID.substring(0, 8)}...`);
+  }
+
   // Test database
   await testDatabase();
-  });
-})();
+});
 
 // Error handling
 process.on('uncaughtException', (err) => {
