@@ -41,6 +41,9 @@ COPY shiprocket.js .
 COPY prisma ./prisma
 COPY public ./public
 
+# Generate Prisma client (required for Prisma ORM to work)
+RUN npx prisma generate
+
 # Copy built frontend from builder
 COPY --from=frontend-builder /app/build ./build
 
