@@ -3,16 +3,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Order {
-  id              String    @id @default(uuid())
-  invoice         String    @unique
+  id              String   @id @default(uuid())
+  invoice         String   @unique
   amount          Float
-  currency        String    @default("INR")
-  status          String    @default("created")
+  currency        String   @default("INR")
+  status          String   @default("created")
+  shippingCost    Float?
   subtotal        Float?
   tax             Float?
   shippingCharges Float?
@@ -23,34 +24,38 @@ model Order {
   buyerCity       String?
   buyerState      String?
   buyerPincode    String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   payments        Payment[]
   shipment        Shipment?
 }
 
 model Payment {
-  id                String   @id @default(uuid())
-  orderId           String
-  razorpayOrderId   String?
-  razorpayPaymentId String?
-  razorpaySignature String?
-  status            String   @default("created")
-  amount            Float
-  currency          String   @default("INR")
-  createdAt         DateTime @default(now())
-  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(uuid())
+  orderId            String
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+  razorpaySignature  String?
+  status             String   @default("created")
+  amount             Float
+  currency           String   @default("INR")
+  createdAt          DateTime @default(now())
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Shipment {
-  id             String   @id @default(uuid())
-  orderId        String?  @unique
-  shiprocketId   String?
-  awb            String?
-  courier        String?
-  status         String   @default("created")
-  payload        String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  order          Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  orderId          String   @unique
+  shiprocketId     String?
+  awb              String?
+  courier          String?
+  status           String   @default("created")
+  payload          String?
+  idempotencyKey   String?  @unique
+  shiprocketJobId  String?
+  failureCount     Int?     @default(0)
+  lastError        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }

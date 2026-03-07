@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+    getAuth,
+    signInWithPopup,
+    GoogleAuthProvider,
+    onAuthStateChanged,
+    signOut,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    updateProfile,
+    signInAnonymously
+} from "firebase/auth";
 
 // --- Configuration ---
 const apiKey = ""; // Gemini API Key
@@ -20,12 +28,12 @@ const firebaseConfig = {
 };
 
 // --- Initialize Firebase ---
-let app, auth, db, analytics;
+let app, auth;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
-  analytics = getAnalytics(app);
+  // db = getFirestore(app);
+  // analytics = getAnalytics(app);
   console.log("Firebase Initialized Successfully");
 } catch (error) {
   console.error("Firebase Initialization Error:", error);
@@ -323,6 +331,16 @@ The strength of tradition for a confident, healthy smile.`
 
 // --- Shared Components ---
 
+const loadRazorpay = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 const Styles = () => (
     <style dangerouslySetInnerHTML={{__html: `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -340,25 +358,25 @@ const Styles = () => (
     .bg-primary { background-color: var(--primary); }
     .border-primary { border-color: var(--primary); }
     .ring-primary { --tw-ring-color: var(--primary); }
-    .shadow-primary\/20 { --tw-shadow-color: rgba(242, 108, 13, 0.2); }
-    .shadow-primary\/30 { --tw-shadow-color: rgba(242, 108, 13, 0.3); }
-    .shadow-primary\/40 { --tw-shadow-color: rgba(242, 108, 13, 0.4); }
+    .shadow-primary\\/20 { --tw-shadow-color: rgba(242, 108, 13, 0.2); }
+    .shadow-primary\\/30 { --tw-shadow-color: rgba(242, 108, 13, 0.3); }
+    .shadow-primary\\/40 { --tw-shadow-color: rgba(242, 108, 13, 0.4); }
     .fill-primary { fill: var(--primary); }
     
-    .bg-primary\/5 { background-color: rgba(242, 108, 13, 0.05); }
-    .bg-primary\/10 { background-color: rgba(242, 108, 13, 0.1); }
-    .bg-primary\/20 { background-color: rgba(242, 108, 13, 0.2); }
-    .border-primary\/10 { border-color: rgba(242, 108, 13, 0.1); }
-    .border-primary\/20 { border-color: rgba(242, 108, 13, 0.2); }
-    .border-primary\/30 { border-color: rgba(242, 108, 13, 0.3); }
-    .border-primary\/50 { border-color: rgba(242, 108, 13, 0.5); }
+    .bg-primary\\/5 { background-color: rgba(242, 108, 13, 0.05); }
+    .bg-primary\\/10 { background-color: rgba(242, 108, 13, 0.1); }
+    .bg-primary\\/20 { background-color: rgba(242, 108, 13, 0.2); }
+    .border-primary\\/10 { border-color: rgba(242, 108, 13, 0.1); }
+    .border-primary\\/20 { border-color: rgba(242, 108, 13, 0.2); }
+    .border-primary\\/30 { border-color: rgba(242, 108, 13, 0.3); }
+    .border-primary\\/50 { border-color: rgba(242, 108, 13, 0.5); }
     
-    .hover\:bg-primary:hover { background-color: var(--primary); }
-    .hover\:text-primary:hover { color: var(--primary); }
-    .hover\:border-primary:hover { border-color: var(--primary); }
-    .group-hover\:text-primary:hover { color: var(--primary); }
-    .focus\:ring-primary:focus { --tw-ring-color: var(--primary); }
-    .focus\:border-primary:focus { border-color: var(--primary); }
+    .hover\\:bg-primary:hover { background-color: var(--primary); }
+    .hover\\:text-primary:hover { color: var(--primary); }
+    .hover\\:border-primary:hover { border-color: var(--primary); }
+    .group-hover\\:text-primary:hover { color: var(--primary); }
+    .focus\\:ring-primary:focus { --tw-ring-color: var(--primary); }
+    .focus\\:border-primary:focus { border-color: var(--primary); }
 
     .bg-background-light { background-color: var(--bg-light); }
     .font-display { font-family: 'Inter', sans-serif; }
@@ -469,7 +487,7 @@ const HeaderActions = ({ cartCount, onCartClick, onAccountClick, user, onLoginCl
     </button>
     {user ? (
         <button onClick={onAccountClick} className="size-9 rounded-full bg-gradient-to-br from-primary to-orange-600 text-white font-bold flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95 text-xs overflow-hidden">
-            {typeof user.avatar === 'string' && user.avatar.length > 2 ? <img src={user.avatar} className="w-full h-full object-cover"/> : user.name?.[0]}
+            {typeof user.avatar === 'string' && user.avatar.length > 2 ? <img src={user.avatar} className="w-full h-full object-cover" alt="User"/> : user.name?.[0]}
         </button>
     ) : (
         <button onClick={onLoginClick} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900 hover:bg-black text-white text-sm font-bold shadow-md transition-all active:scale-95">
@@ -679,19 +697,19 @@ const NearbyManufacturers = () => {
     setLoading(true);
     setError('');
     try {
-      let latLng = { latitude: 37.78193, longitude: -122.40476 };
+      // let latLng = { latitude: 37.78193, longitude: -122.40476 };
       if (navigator.geolocation) {
         try {
-          const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
-          latLng = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+          await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+          // latLng = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
         } catch (e) {}
       }
 
       if (!genAI) throw new Error("AI not configured");
 
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview" });
-      const result = await model.generateContent("Find verified cosmetic and herbal manufacturers near my current location. Return a JSON array of 3 fictitious but realistic results with name, uri (url), and snippet.");
-      const text = result.response.text();
+      await model.generateContent("Find verified cosmetic and herbal manufacturers near my current location. Return a JSON array of 3 fictitious but realistic results with name, uri (url), and snippet.");
+      // const text = result.response.text();
       
       const simulatedResults = [
           { name: "Golden State Organics", uri: "#", snippet: "Certified organic manufacturing facility specializing in essential oils." },
@@ -765,7 +783,7 @@ const FactoryModal = ({ factory, onClose, onChat }) => {
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl relative flex flex-col">
                  <div className="h-64 bg-gray-900 relative shrink-0">
-                    <img src={factory.videoThumbnail} className="w-full h-full object-cover opacity-60" />
+                    <img src={factory.videoThumbnail} className="w-full h-full object-cover opacity-60" alt="Factory Video" />
                     <div className="absolute inset-0 flex items-center justify-center">
                         <button className="size-20 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white flex items-center justify-center text-white hover:scale-110 transition-transform group">
                             <span className="material-symbols-outlined text-[48px] fill-current group-hover:text-primary transition-colors">play_arrow</span>
@@ -854,7 +872,7 @@ const FactoryModal = ({ factory, onClose, onChat }) => {
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                         {factoryProducts.map(p => (
                                             <div key={p.id} className="flex gap-3 p-3 rounded-xl border border-gray-200 hover:border-primary bg-white shadow-sm hover:shadow-md transition-all items-center cursor-pointer" onClick={() => onClose() /* Ideally navigating to product, but closing for now to allow cart add from main list */}>
-                                                <img src={p.img} className="size-14 object-contain bg-gray-50 rounded-lg border border-gray-100 shrink-0" />
+                                                <img src={p.img} className="size-14 object-contain bg-gray-50 rounded-lg border border-gray-100 shrink-0" alt={p.title} />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-xs font-bold text-gray-900 line-clamp-2 leading-tight mb-1">{p.title}</p>
                                                     <div className="flex justify-between items-end">
@@ -972,7 +990,7 @@ const ProductModal = ({ product, onClose, onAddToCart }) => {
         </button>
         
         <div className="w-full md:w-1/2 bg-gray-50 relative min-h-[300px] md:min-h-full">
-          <img src={product.img} className="absolute inset-0 w-full h-full object-contain p-8" />
+          <img src={product.img} className="absolute inset-0 w-full h-full object-contain p-8" alt={product.title} />
           <div className="absolute top-6 left-6 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
             <span className="material-symbols-outlined text-[16px]">verified</span>
             {product.source || "Direct from Manufacturer"}
@@ -1178,7 +1196,7 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
       </div>
 
       <div className="relative aspect-[21/9] md:aspect-[3/1] rounded-3xl overflow-hidden shadow-xl">
-        <img src="https://images.unsplash.com/photo-1556228720-1987594a8a4e?auto=format&fit=crop&q=80&w=2000" className="absolute inset-0 w-full h-full object-cover" />
+        <img src="https://images.unsplash.com/photo-1556228720-1987594a8a4e?auto=format&fit=crop&q=80&w=2000" className="absolute inset-0 w-full h-full object-cover" alt="Banner" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent flex flex-col justify-center p-8 md:p-12">
           <h2 className="text-white text-3xl md:text-5xl font-bold leading-tight mb-4 max-w-xl">Global Sourcing for Premium Skin Care</h2>
           <p className="text-gray-200 text-base md:text-lg mb-8 max-w-md">Connect directly with verified private label manufacturers and secure the best wholesale rates.</p>
@@ -1212,7 +1230,7 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
           {ALL_PRODUCTS.filter(p => [104, 106, 105].includes(p.id)).map(p => (
             <div key={p.id} onClick={() => onProductClick(p)} className="bg-white p-3 rounded-2xl border border-gray-100 relative group shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between">
               <div className="aspect-square rounded-xl overflow-hidden mb-3 relative">
-                <img src={p.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <img src={p.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={p.title} />
                 <button onClick={(e) => { e.stopPropagation(); onProductClick(p); }} className="absolute bottom-2 right-2 size-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-xl translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all active:scale-90">
                    <span className="material-symbols-outlined text-[24px]">add_shopping_cart</span>
                 </button>
@@ -1261,7 +1279,7 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
             {ALL_PRODUCTS.filter(p => p.title.toLowerCase().includes('devson') && !p.outOfStock).map((p, i) => (
               <div key={i} onClick={() => onProductClick(p)} className="bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col group relative shadow-sm hover:shadow-xl transition-all cursor-pointer">
                 <div className="relative aspect-square bg-gray-50">
-                  <img src={p.img} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700" />
+                  <img src={p.img} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700" alt={p.title} />
                   {p.discount && <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">{p.discount}</div>}
                   {!p.discount && p.pricing && p.pricing.mrp && (
                     <div className="absolute top-2 left-2 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">
@@ -1333,7 +1351,7 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
                 {p.discount || getDiscount(p.price, p.pricing.mrp)}
               </div>
               <div className="aspect-[4/3] overflow-hidden bg-gray-50">
-                <img src={p.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={p.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={p.title} />
               </div>
               <div className="p-3">
                 <h4 className="text-sm font-bold text-gray-900 leading-snug mb-1">{p.title}</h4>
@@ -1386,7 +1404,7 @@ const HomeScreen = ({ navigate, onAddToCart, cartCount, onOpenAI, onProductClick
           ].map(p => (
             <div key={p.id} onClick={() => onProductClick(p)} className="bg-white rounded-2xl p-4 border border-gray-100 relative group shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between">
               <div className="aspect-square rounded-xl overflow-hidden mb-4 relative bg-gray-50">
-                <img src={p.img} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                <img src={p.img} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" alt={p.title} />
                 <div className="absolute top-2 left-2 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">
                     {getDiscount(p.price, p.pricing.mrp)}
                 </div>
@@ -1592,7 +1610,7 @@ const WholesaleScreen = ({ navigate, onAddToCart, cartCount, onProductClick, use
                             </div>
 
                             <div className="relative aspect-[1.1] bg-white p-4 border-b border-gray-50">
-                                <img src={p.img} className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-500 ${p.outOfStock ? 'grayscale opacity-50' : 'group-hover:scale-105'}`} />
+                                <img src={p.img} className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-500 ${p.outOfStock ? 'grayscale opacity-50' : 'group-hover:scale-105'}`} alt={p.title} />
                                 <button onClick={(e) => { e.stopPropagation(); onProductClick(p); }} className="absolute bottom-2 right-2 size-8 bg-white rounded-full flex items-center justify-center text-primary shadow border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-gray-50">
                                     <span className="material-symbols-outlined text-[18px]">visibility</span>
                                 </button>
@@ -2182,11 +2200,12 @@ const MessengerScreen = ({ navigate, initialChatId }) => {
   );
 };
 
-const CartOverlay = ({ cart, onClose, onRemove, isOpen }) => {
+const CartOverlay = ({ cart, onClose, onRemove, isOpen, onCheckout }) => {
   const subtotal = useMemo(() => {
     return cart.reduce((acc, item) => {
       const p = parseFloat(item.price.replace(/[^0-9.]/g, ''));
-      return acc + (isNaN(p) ? 0 : p);
+      const q = parseInt(item.moq.replace(/[^0-9]/g, '')) || 1;
+      return acc + ((isNaN(p) ? 0 : p) * q);
     }, 0);
   }, [cart]);
 
@@ -2212,7 +2231,7 @@ const CartOverlay = ({ cart, onClose, onRemove, isOpen }) => {
             cart.map((item, i) => (
               <div key={`${item.id}-${i}`} className="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
                 <div className="size-20 rounded-xl bg-white border border-gray-200 shrink-0 overflow-hidden">
-                  <img src={item.img} className="w-full h-full object-contain group-hover:scale-110 transition-transform" />
+                  <img src={item.img} className="w-full h-full object-contain group-hover:scale-110 transition-transform" alt={item.title} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-sm text-gray-900 truncate">{item.title}</h4>
@@ -2232,7 +2251,7 @@ const CartOverlay = ({ cart, onClose, onRemove, isOpen }) => {
             <span className="text-primary">₹{subtotal.toLocaleString()}</span>
           </div>
           <p className="text-[10px] text-gray-400 text-center italic">Final logistics and duties calculated at checkout.</p>
-          <button className="w-full py-5 bg-primary text-white font-bold rounded-2xl shadow-2xl shadow-primary/30 hover:bg-orange-600 transition-all disabled:opacity-50 disabled:bg-gray-200 flex items-center justify-center gap-2 text-lg active:scale-95" disabled={cart.length === 0}>
+          <button onClick={onCheckout} className="w-full py-5 bg-primary text-white font-bold rounded-2xl shadow-2xl shadow-primary/30 hover:bg-orange-600 transition-all disabled:opacity-50 disabled:bg-gray-200 flex items-center justify-center gap-2 text-lg active:scale-95" disabled={cart.length === 0}>
             Proceed to Checkout
           </button>
         </div>
@@ -2332,6 +2351,12 @@ const AccountScreen = ({ navigate }) => {
           </button>
         ))}
       </div>
+
+      {/* My Orders Section */}
+      <div className="border-t border-gray-100 pt-10">
+        <MyOrdersScreen user={user} />
+      </div>
+
       <div className="flex flex-col md:flex-row gap-4 pt-6 border-t border-gray-100">
         <button onClick={handleSignOut} className="flex-1 py-4 text-red-500 font-bold text-sm bg-red-50 rounded-2xl border border-red-100 hover:bg-red-100 transition-colors">Sign Out of All Sessions</button>
         <button className="flex-1 py-4 text-gray-500 font-bold text-sm bg-gray-50 rounded-2xl border border-gray-200">Switch Workspace</button>
@@ -2413,6 +2438,115 @@ const App = () => {
       }
   };
 
+  const handleCheckout = async () => {
+    const res = await loadRazorpay();
+    if (!res) {
+      alert('Razorpay SDK failed to load. Are you online?');
+      return;
+    }
+
+    // Calculate total amount (Unit Price * Quantity)
+    const totalAmount = cartItems.reduce((acc, item) => {
+       const unitPrice = parseFloat(item.price.replace(/[^0-9.]/g, ''));
+       const qty = parseInt(item.moq.replace(/[^0-9]/g, '')) || 1;
+       return acc + (unitPrice * qty);
+    }, 0);
+
+    if (totalAmount === 0) return;
+
+    try {
+      // 1. Create Order on Server
+      const response = await fetch('http://localhost:3002/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: totalAmount,
+          currency: "INR"
+        })
+      });
+
+      // Safely handle non-JSON responses (e.g., 404 HTML or Server Crash)
+      const contentType = response.headers.get("content-type");
+      let orderData;
+      
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        orderData = await response.json();
+      } else {
+        const text = await response.text();
+        console.error("Server returned non-JSON:", text);
+        throw new Error(`Server Error (${response.status}): Received non-JSON response.`);
+      }
+
+      if (!response.ok) {
+          const errMsg = orderData?.error || "Payment initialization failed";
+          console.error("Order Creation Failed:", errMsg);
+          throw new Error(errMsg);
+      }
+
+      // 2. Open Razorpay
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Nexis B2B",
+        description: "Wholesale Order",
+        order_id: orderData.id,
+        handler: async function (response) {
+          // 3. Verify Payment & Generate Invoice
+          const verifyPayload = {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            invoicePayload: {
+                shipping_charges: 0,
+                billing_customer_name: user?.name || "Guest",
+                billing_address: "123 Business Park, New Delhi", 
+                billing_pincode: "110001",
+                billing_city: "New Delhi",
+                billing_state: "Delhi",
+                billing_phone: "9999999999",
+                order_items: cartItems.map(item => ({
+                    name: item.title,
+                    units: parseInt(item.moq.replace(/[^0-9]/g, '')) || 1,
+                    selling_price: parseFloat(item.price.replace(/[^0-9.]/g, ''))
+                }))
+            }
+          };
+
+          const verifyRes = await fetch('http://localhost:3002/api/payment/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(verifyPayload)
+          });
+          
+          const verifyData = await verifyRes.json();
+          if (verifyData.ok) {
+              alert("Payment Successful! Invoice generated.");
+              setCartItems([]);
+              setShowCart(false);
+          } else {
+              alert("Payment Verification Failed: " + (verifyData.message || "Unknown Error"));
+          }
+        },
+        prefill: {
+          name: user?.name || "",
+          email: user?.email || "",
+          contact: "9999999999"
+        },
+        theme: {
+          color: "#f26c0d"
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+
+    } catch (error) {
+      console.error("Checkout Error:", error);
+      alert("Checkout failed: " + error.message);
+    }
+  };
+
   const renderScreen = () => {
     switch(activeTab) {
       case 'home': return <HomeScreen navigate={setActiveTab} onAddToCart={handleAddToCart} cartCount={cartItems.length} onOpenAI={() => setShowAI(true)} onProductClick={setSelectedProduct} user={user} onLoginClick={() => setShowLogin(true)} onCartClick={() => setShowCart(true)} />;
@@ -2445,6 +2579,7 @@ const App = () => {
           cart={cartItems} 
           onClose={() => setShowCart(false)} 
           onRemove={handleRemoveFromCart} 
+          onCheckout={handleCheckout}
         />
         
         <AIChatBot 

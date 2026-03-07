@@ -305,13 +305,3 @@ Each product has:
 6. **Clear MOQ**: Minimum order quantities clearly displayed
 7. **Discount transparency**: Automatic % calculation from MRP to sale price
 
----
-
-## API Configuration
-
-```javascript
-// File: src/config.js
-
-const API_BASE_URL = "https://nekxuz-backend.onrender.com";
-```
-

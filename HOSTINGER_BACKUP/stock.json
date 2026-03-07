@@ -1,0 +1,158 @@
+{
+  "c2": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2025-02-28T00:00:00Z"
+  },
+  "mcs2": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2025-02-28T00:00:00Z"
+  },
+  "c4": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2025-02-28T00:00:00Z"
+  },
+  "u1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2025-02-28T00:00:00Z"
+  },
+  "u2": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2025-02-28T00:00:00Z"
+  },
+  "u3": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2025-02-28T00:00:00Z"
+  },
+  "f3": {
+    "available": 104,
+    "reserved": 25,
+    "sold": 100,
+    "lastUpdated": "2026-03-02T11:06:11.727Z"
+  },
+  "u4": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:17.558Z"
+  },
+  "u5": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:23.838Z"
+  },
+  "f1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:26.461Z"
+  },
+  "f2": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:28.402Z"
+  },
+  "dc1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:33.785Z"
+  },
+  "dc2": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:36.673Z"
+  },
+  "vgh1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:38.481Z"
+  },
+  "blueva3": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:40.351Z"
+  },
+  "blueva4": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:41.987Z"
+  },
+  "blueva5": {
+    "available": 105,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:06:04.292Z"
+  },
+  "combo1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:06:00.636Z"
+  },
+  "vs2": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:04:54.751Z"
+  },
+  "devson3": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:05:24.013Z"
+  },
+  "velsoft1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:05:44.563Z"
+  },
+  "w1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:05:46.888Z"
+  },
+  "vs1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:05:48.790Z"
+  },
+  "vs3": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:05:51.218Z"
+  },
+  "devson2": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:05:54.310Z"
+  },
+  "devson1": {
+    "available": 100,
+    "reserved": 0,
+    "sold": 0,
+    "lastUpdated": "2026-03-02T11:05:56.945Z"
+  }
+}

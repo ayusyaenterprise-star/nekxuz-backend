@@ -17,9 +17,6 @@ const CheckoutScreen = ({ cartItems = [], user, onOrderComplete }) => {
   const [orderSummary, setOrderSummary] = React.useState(null);
   const [error, setError] = React.useState('');
 
-  // DIRECT BACKEND URL - Bypasses proxy issues
-  const API_URL = 'https://nekxuz-backend-oqcn.onrender.com';
-
   // Calculate subtotal
   const subtotal = cartItems.reduce((sum, item) => {
     const price = parseFloat(String(item.price).replace(/[^0-9.]/g, ''));
@@ -31,7 +28,7 @@ const CheckoutScreen = ({ cartItems = [], user, onOrderComplete }) => {
   React.useEffect(() => {
     const calculateTotal = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/orders/calculate`, {
+        const response = await fetch('http://localhost:3002/api/orders/calculate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -84,7 +81,7 @@ const CheckoutScreen = ({ cartItems = [], user, onOrderComplete }) => {
       };
 
       // Send to backend
-      const response = await fetch(`${API_URL}/api/orders/create`, {
+      const response = await fetch('http://localhost:3002/api/orders/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

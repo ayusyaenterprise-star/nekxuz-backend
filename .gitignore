@@ -38,28 +38,6 @@ build/
 ### Mac OS ###
 .DS_Store
 
-### Frontend (React) ###
-/src/
-/public/
-/build_hostinger/
-/build/
-/build 2/
-/MASTER_PRODUCTION_BUILD/
-/HOSTINGER_BACKUP/
-/node_modules 2/
-
-### Other ###
-/nekxuz/
-/deploy/
-/backend-deploy/
-/backend_hostinger/
-/final_launch/
-/migrations/
-/.mvn/
-/target/
-*.db
-*.sqlite
-
 # Node
 node_modules/
 npm-debug.log

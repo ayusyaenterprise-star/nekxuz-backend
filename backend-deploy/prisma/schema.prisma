@@ -1,0 +1,99 @@
+// Prisma schema file
+// PostgreSQL Database Connection
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model Order {
+  id                String   @id @default(cuid())
+  invoice           String?
+  amount            Float
+  currency          String   @default("INR")
+  status            String   @default("pending")
+  subtotal          Float    @default(0)
+  tax               Float    @default(0)
+  shippingCharges   Float    @default(0)
+  
+  // Buyer Information
+  buyerName         String?
+  buyerEmail        String?
+  buyerPhone        String?
+  buyerAddress      String?
+  buyerCity         String?
+  buyerState        String?
+  buyerPincode      String?
+  
+  // Relations
+  payments          Payment[]
+  shipment          Shipment?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([buyerEmail])
+  @@index([status])
+}
+
+model Payment {
+  id                    String   @id @default(cuid())
+  orderId               String
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  razorpayOrderId       String?
+  razorpayPaymentId     String?
+  razorpaySignature     String?
+  
+  amount                Float
+  currency              String   @default("INR")
+  status                String   @default("pending")
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([orderId])
+  @@index([razorpayPaymentId])
+}
+
+model Shipment {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  shiprocketId      String?
+  awb               String?
+  courier           String?
+  status            String   @default("pending")
+  trackingUrl       String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([orderId])
+  @@index([shiprocketId])
+}

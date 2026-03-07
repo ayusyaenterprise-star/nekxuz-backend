@@ -1,32 +1,47 @@
-# Multi-stage Dockerfile for Nekxuz B2B Backend
+# Multi-stage Dockerfile for Nekxuz B2B Platform
 # Optimized for production deployment
 
-# Production runtime
-FROM node:20-alpine
+# Stage 1: Build frontend
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build frontend
+RUN npm run build
+
+# Stage 2: Production runtime
+FROM node:18-alpine
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init postgresql-client
 
 # Create app user for security
-RUN addgroup -g 1001 appuser && adduser -D -u 1001 -G appuser appuser
+RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json yarn.lock* ./
+COPY package*.json ./
 
-# Install ALL dependencies (including dev for prisma CLI generation)
-RUN yarn install && yarn cache clean
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy backend code
 COPY server.js .
-COPY shiprocket.js .
-COPY delhivery.js .
 COPY prisma ./prisma
-# Note: public/ and frontend build removed - frontend is deployed separately to Hostinger
+COPY public ./public
 
-# Generate Prisma client (must be done as root before switching user)
-RUN npx prisma generate
+# Copy built frontend from builder
+COPY --from=frontend-builder /app/build ./build
 
 # Create directories for logs and data
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
