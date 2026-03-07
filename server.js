@@ -227,7 +227,22 @@ async function generateInvoicePdfBuffer(payload) {
 
 // --- EXPRESS APP SETUP ---
 const app = express();
-app.use(cors({ origin: '*', credentials: true }));
+
+// CORS Configuration for production
+const corsOptions = {
+  origin: [
+    'https://nekxuz.in',        // Production Hostinger domain
+    'http://localhost:3000',     // Local development
+    'http://localhost:3001',     // Local development
+    'http://localhost:3002',     // Local development
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // Define build path globally
