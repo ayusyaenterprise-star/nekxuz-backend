@@ -8,5 +8,5 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: CACHE_BUST
-        value: $(date +%s)
+      - key: BUILD_TIMESTAMP
+        value: "1772911920"
