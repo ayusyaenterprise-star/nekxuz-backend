@@ -20,6 +20,8 @@ RUN yarn install && yarn cache clean
 
 # Copy backend code
 COPY server.js .
+COPY shiprocket.js .
+COPY delhivery.js .
 COPY prisma ./prisma
 # Note: public/ and frontend build removed - frontend is deployed separately to Hostinger
 
