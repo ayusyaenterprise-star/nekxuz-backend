@@ -1,0 +1,5 @@
+# Cache Invalidation
+# This file forces Render to skip its build cache and do a fresh extraction.
+# Generated: 2026-03-07 10:02 UTC
+
+CACHE_BUSTER_$(date +%s)
