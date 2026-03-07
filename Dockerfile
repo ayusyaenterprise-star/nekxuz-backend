@@ -21,8 +21,8 @@ RUN npm run build
 # Stage 2: Production runtime
 FROM node:18-alpine
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init postgresql-client
+# Install dumb-init, postgresql-client, and OpenSSL for Prisma
+RUN apk add --no-cache dumb-init postgresql-client openssl
 
 # Create app user for security (using GID 1001 to avoid conflicts)
 RUN addgroup -g 1001 appuser && adduser -D -u 1001 -G appuser appuser
