@@ -259,22 +259,14 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Define build path globally
-const buildPath = path.join(__dirname, 'build');
-
-// Serve React build (if it exists) - BEFORE public for priority
-if (fs.existsSync(buildPath)) {
-  app.use(express.static(buildPath));
-}
-
-// Serve static files from public folder
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Request Logger
+// Request Logger - BEFORE API routes so they log all requests
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
+
+// NOTE: Static file serving removed - this is a backend API server
+// The public/ and build/ folders are for frontend which is hosted separately on Hostinger
 
 const PORT = process.env.PORT || 3002;
 
