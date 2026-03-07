@@ -17,6 +17,10 @@ const shiprocket = require('./shiprocket');
 
 const prisma = new PrismaClient();
 
+// 🔥 UNIQUE BUILD MARKER - Testing if Render picks up new deployments
+const BUILD_ID = 'MANUAL_CORS_FIX_' + Date.now();
+console.log(`✅ Server starting with BUILD_ID: ${BUILD_ID}`);
+
 // --- HSN & GST CONFIGURATION ---
 const HSN_RATES = {
   "6109": 18, // Apparel/T-shirts
@@ -308,7 +312,7 @@ try {
 // --- API ENDPOINTS ---
 
 app.get('/', (req, res) => {
-    res.json({ status: 'ok', message: 'Nekxuz Backend Running' });
+    res.json({ status: 'ok', message: 'Nekxuz Backend Running', buildId: BUILD_ID, corsMiddleware: 'ENABLED' });
 });
 
 app.post('/api/payment/create-order', async (req, res) => {
