@@ -3,6 +3,7 @@ services:
     name: nekxuz-backend
     env: node
     plan: free
+    rootDir: backend-deploy
     buildCommand: rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
     startCommand: node server.js
     envVars:

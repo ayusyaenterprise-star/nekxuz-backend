@@ -17,6 +17,10 @@ const shiprocket = require('./shiprocket');
 
 const prisma = new PrismaClient();
 
+// 🔥 UNIQUE BUILD MARKER - Testing if Render picks up new deployments from backend-deploy/
+const BUILD_ID = 'BACKEND_DEPLOY_CORS_FIX_' + Date.now();
+console.log(`✅ Backend Server starting with BUILD_ID: ${BUILD_ID}`);
+
 // --- HSN & GST CONFIGURATION ---
 const HSN_RATES = {
   "6109": 18, // Apparel/T-shirts
@@ -236,6 +240,22 @@ app.use(cors({
   credentials: false
 }));
 
+// ⚠️ BACKUP MANUAL CORS HEADERS - Fallback if cors() doesn't work
+// This ensures ALL requests get proper CORS headers
+app.use((req, res, next) => {
+  // Set CORS headers for all responses
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -274,7 +294,7 @@ try {
 // --- API ENDPOINTS ---
 
 app.get('/', (req, res) => {
-    res.json({ status: 'ok', message: 'Nekxuz Backend Running' });
+    res.json({ status: 'ok', message: 'Nekxuz Backend Running from backend-deploy/', buildId: BUILD_ID, corsMiddleware: 'ENABLED' });
 });
 
 app.post('/api/payment/create-order', async (req, res) => {
