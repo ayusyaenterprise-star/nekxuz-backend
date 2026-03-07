@@ -32,8 +32,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies (use npm install to ensure compatibility)
-RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
+# Install all dependencies (including dev deps needed for prisma generate)
+RUN npm install --legacy-peer-deps
 
 # Copy backend code
 COPY server.js .
@@ -46,6 +46,9 @@ RUN npx prisma generate
 
 # Copy built frontend from builder
 COPY --from=frontend-builder /app/build ./build
+
+# Clean up - remove dev dependencies to keep image small
+RUN npm install --only=production --legacy-peer-deps --no-save && npm cache clean --force
 
 # Create directories for logs and data
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
