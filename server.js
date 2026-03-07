@@ -245,6 +245,34 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
+
+// ⚠️ BACKUP MANUAL CORS HEADERS - Added as fallback since cors middleware may not work on Render
+// This ensures all requests get proper CORS headers
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  const allowedOrigins = [
+    'https://nekxuz.in',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002'
+  ];
+  
+  // Set CORS headers if origin is allowed
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  }
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
 // Define build path globally
 const buildPath = path.join(__dirname, 'build');
 
