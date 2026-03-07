@@ -18,18 +18,40 @@
     "express": "^5.2.1",
     "firebase": "^10.0.0",
     "firebase-admin": "^13.6.0",
+    "html2canvas": "^1.4.1",
     "json-buffer": "^3.0.1",
     "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.0",
     "nodemailer": "^7.0.12",
     "pdfkit": "^0.17.2",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-scripts": "^5.0.1",
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
     "prisma": "^5.22.0"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "backend": "node server.js",
+    "backend:dev": "node server.js",
     "postinstall": "npx prisma generate || true"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
