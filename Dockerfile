@@ -1,25 +1,8 @@
-# Multi-stage Dockerfile for Nekxuz B2B Platform
+# Multi-stage Dockerfile for Nekxuz B2B Backend
 # Optimized for production deployment
 
-# Stage 1: Build frontend
-FROM node:18-alpine AS frontend-builder
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source code
-COPY . .
-
-# Build frontend
-RUN npm run build
-
-# Stage 2: Production runtime
-FROM node:18-alpine
+# Production runtime
+FROM node:20-alpine
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init postgresql-client
@@ -38,10 +21,7 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy backend code
 COPY server.js .
 COPY prisma ./prisma
-COPY public ./public
-
-# Copy built frontend from builder
-COPY --from=frontend-builder /app/build ./build
+# Note: public/ and frontend build removed - frontend is deployed separately to Hostinger
 
 # Create directories for logs and data
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
