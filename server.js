@@ -28,47 +28,13 @@ if (process.cwd().endsWith('/src') || process.cwd().endsWith('\\src')) {
 console.log('📁 Final working directory:', process.cwd());
 console.log('📝 Node environment:', process.env.NODE_ENV || 'development');
 
-// Check if prisma/schema.prisma exists
-const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
-console.log('🔍 Looking for schema at:', schemaPath);
-console.log('   Schema exists?', fs.existsSync(schemaPath));
-
 // Initialize Prisma with generation safeguard
 let prisma;
 try {
   console.log('🔄 Initializing Prisma...');
   
-  // Try to require @prisma/client directly (it may already be generated)
-  let PrismaClient;
-  try {
-    PrismaClient = require('@prisma/client').PrismaClient;
-    console.log('✅ Found pre-generated Prisma client');
-  } catch (importErr) {
-    console.log('⚠️ Prisma client not pre-generated, attempting to generate...');
-    
-    // Only try generation if schema exists
-    if (fs.existsSync(schemaPath)) {
-      try {
-        console.log('📦 Running: npx prisma generate');
-        execSync('npx prisma generate', { 
-          stdio: 'pipe',  // Don't inherit stdio to avoid flooding logs
-          cwd: process.cwd(),
-          timeout: 30000,  // 30 second timeout
-          env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL }
-        });
-        console.log('✅ Prisma generation completed');
-        PrismaClient = require('@prisma/client').PrismaClient;
-      } catch (genErr) {
-        console.error('❌ Prisma generation failed:', genErr.message);
-        throw genErr;
-      }
-    } else {
-      console.error('❌ Cannot generate Prisma: schema.prisma not found at', schemaPath);
-      throw new Error('Prisma schema not found');
-    }
-  }
-  
-  // Now initialize the client
+  // Import pre-generated Prisma client
+  const { PrismaClient } = require('@prisma/client');
   prisma = new PrismaClient();
   console.log('✅ Prisma Client initialized successfully');
 } catch (err) {

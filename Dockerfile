@@ -23,6 +23,9 @@ COPY server.js .
 COPY prisma ./prisma
 # Note: public/ and frontend build removed - frontend is deployed separately to Hostinger
 
+# Generate Prisma client (must be done as root before switching user)
+RUN npx prisma generate
+
 # Create directories for logs and data
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 
