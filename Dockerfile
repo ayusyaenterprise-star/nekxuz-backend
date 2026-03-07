@@ -9,8 +9,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (use npm install to update lock file if needed)
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -32,8 +32,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install only production dependencies (use npm install to ensure compatibility)
+RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
 
 # Copy backend code
 COPY server.js .
