@@ -13,10 +13,10 @@ RUN addgroup -g 1001 appuser && adduser -D -u 1001 -G appuser appuser
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package*.json yarn.lock* ./
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies using yarn (production only)
+RUN yarn install --production && yarn cache clean
 
 # Copy backend code
 COPY server.js .
