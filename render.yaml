@@ -3,10 +3,10 @@ services:
     name: nekxuz-backend
     env: node
     plan: free
-    buildCommand: npm install
+    buildCommand: rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: BUILD_TIMESTAMP
-        value: "1772912191"
+      - key: FORCE_REBUILD
+        value: "true"
