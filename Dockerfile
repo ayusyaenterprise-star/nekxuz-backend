@@ -8,7 +8,7 @@ FROM node:20-alpine
 RUN apk add --no-cache dumb-init postgresql-client
 
 # Create app user for security
-RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
+RUN addgroup -g 1001 appuser && adduser -D -u 1001 -G appuser appuser
 
 WORKDIR /app
 
