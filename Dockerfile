@@ -37,6 +37,7 @@ RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
 
 # Copy backend code
 COPY server.js .
+COPY shiprocket.js .
 COPY prisma ./prisma
 COPY public ./public
 
