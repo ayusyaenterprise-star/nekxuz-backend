@@ -15,8 +15,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json yarn.lock* ./
 
-# Install dependencies using yarn (production only)
-RUN yarn install --production && yarn cache clean
+# Install ALL dependencies (including dev for prisma CLI generation)
+RUN yarn install && yarn cache clean
 
 # Copy backend code
 COPY server.js .
