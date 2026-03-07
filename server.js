@@ -15,8 +15,23 @@ const bcrypt = require('bcryptjs');
 const { execSync } = require('child_process');
 
 console.log('🚀 Server starting...');
-console.log('📁 Current working directory:', process.cwd());
+console.log('📁 Initial working directory:', process.cwd());
+
+// Fix: If Render deployed from /src directory, navigate to project root
+if (process.cwd().endsWith('/src') || process.cwd().endsWith('\\src')) {
+  const projectRoot = path.dirname(process.cwd());
+  console.log('⚠️  Detected /src directory, navigating to project root...');
+  process.chdir(projectRoot);
+  console.log('✅ Changed working directory to:', process.cwd());
+}
+
+console.log('📁 Final working directory:', process.cwd());
 console.log('📝 Node environment:', process.env.NODE_ENV || 'development');
+
+// Check if prisma/schema.prisma exists
+const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
+console.log('🔍 Looking for schema at:', schemaPath);
+console.log('   Schema exists?', fs.existsSync(schemaPath));
 
 // Initialize Prisma with generation safeguard
 let prisma;
@@ -26,10 +41,15 @@ try {
   // First, ensure Prisma client is generated
   try {
     console.log('📦 Running: npx prisma generate');
-    execSync('npx prisma generate', { stdio: 'inherit', cwd: process.cwd() });
+    execSync('npx prisma generate', { 
+      stdio: 'inherit', 
+      cwd: process.cwd(),
+      env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL }
+    });
     console.log('✅ Prisma generation completed');
   } catch (err) {
-    console.log('⚠️ Prisma generation error (may already exist):', err.message);
+    console.log('⚠️ Prisma generation attempted:', err.message);
+    // Continue anyway - the client might already be generated
   }
   
   // Now import and initialize
