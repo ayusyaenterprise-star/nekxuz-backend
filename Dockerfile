@@ -1,30 +1,13 @@
-# Multi-stage Dockerfile for Nekxuz B2B Platform
-# Optimized for production deployment
+# Dockerfile for Nekxuz Backend API Server
+# Backend-only, no frontend build
+# Uses node:18-alpine for small image size
 
-# Stage 1: Build frontend
-FROM node:18-alpine AS frontend-builder
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies (use npm install to update lock file if needed)
-RUN npm install --legacy-peer-deps
-
-# Copy source code
-COPY . .
-
-# Build frontend
-RUN npm run build
-
-# Stage 2: Production runtime
 FROM node:18-alpine
 
-# Install dumb-init, postgresql-client, and OpenSSL for Prisma
-RUN apk add --no-cache dumb-init postgresql-client openssl
+# Install required system packages for Prisma and databases
+RUN apk add --no-cache postgresql-client openssl dumb-init
 
-# Create app user for security (using GID 1001 to avoid conflicts)
+# Create app user for security
 RUN addgroup -g 1001 appuser && adduser -D -u 1001 -G appuser appuser
 
 WORKDIR /app
@@ -32,39 +15,33 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including dev deps needed for prisma generate)
+# Install dependencies (including dev deps for prisma generate)
 RUN npm install --legacy-peer-deps
 
-# Copy backend code
+# Copy backend server files
 COPY server.js .
 COPY shiprocket.js .
 COPY prisma ./prisma
-COPY public ./public
+COPY .env* ./
 
 # Generate Prisma client (required for Prisma ORM to work)
 RUN npx prisma generate
 
-# Copy built frontend from builder
-COPY --from=frontend-builder /app/build ./build
-
-# Clean up - remove dev dependencies to keep image small
-RUN npm install --only=production --legacy-peer-deps --no-save && npm cache clean --force
-
-# Create directories for logs and data
+# Create app directories for logs
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 
-# Switch to non-root user
+# Switch to non-root user for security
 USER appuser
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3002/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3002), (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
-# Expose ports
+# Expose default port (Render will override via PORT env var)
 EXPOSE 3002
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start application
-CMD ["node", "server.js"]
+# Start the backend server
+CMD ["npm", "start"]
