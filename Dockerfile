@@ -27,6 +27,9 @@ COPY .env* ./
 # Generate Prisma client (required for Prisma ORM to work)
 RUN npx prisma generate
 
+# Run database migrations (must be done before switching to non-root user)
+RUN npx prisma migrate deploy || true
+
 # Create app directories for logs
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 
