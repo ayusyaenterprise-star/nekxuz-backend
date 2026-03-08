@@ -1170,13 +1170,8 @@ app.get('/api/support/whatsapp', (req, res) => {
   }
 });
 
-// Serve React app for all other routes (client-side routing)
-const indexPath = path.join(buildPath, 'index.html');
-if (fs.existsSync(indexPath)) {
-  app.get(/^(?!\/api\/)/, (req, res) => {
-    res.sendFile(indexPath);
-  });
-}
+// NOTE: React client-side routing removed - this is API-only backend
+// Frontend is hosted separately on Hostinger at https://nekxuz.in
 
 // Test database connection
 async function testDatabase() {
