@@ -26,7 +26,7 @@
     "razorpay": "^2.9.6"
   },
   "scripts": {
-    "start": "prisma db push --skip-generate || true && prisma generate && node server.js",
+    "start": "rm -rf node_modules/.prisma && prisma db push && prisma generate && node server.js",
     "dev": "node server.js",
     "build": "npm install"
   }
