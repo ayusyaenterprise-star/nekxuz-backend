@@ -1,4 +1,8 @@
-require('dotenv').config();
+// Load .env only if not in production (Render sets env vars directly)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const express = require('express');
 const Razorpay = require('razorpay');
 const bodyParser = require('body-parser');
@@ -393,6 +397,60 @@ app.post('/api/payment/verify', async (req, res) => {
     const digest = hmac.update(razorpay_order_id + '|' + razorpay_payment_id).digest('hex');
     if (digest !== razorpay_signature) return res.status(400).json({ ok: false, message: 'Invalid signature' });
 
+    // 🔴 NEW: Check Stock Availability Before Payment Completion
+    const stockFile = path.join(__dirname, 'stock.json');
+    let stockData = {};
+    if (fs.existsSync(stockFile)) {
+      stockData = JSON.parse(fs.readFileSync(stockFile, 'utf8'));
+    }
+    
+    // Get order items for stock check
+    let orderItems = [];
+    if (invoicePayload && invoicePayload.order_items) {
+      orderItems = invoicePayload.order_items;
+    } else if (meta && meta.precomputedInvoices && meta.precomputedInvoices[0]) {
+      const firstInvoice = meta.precomputedInvoices[0];
+      if (firstInvoice.invoice && firstInvoice.invoice.items) {
+        orderItems = firstInvoice.invoice.items;
+      }
+    }
+    
+    // Check if all items are in stock
+    let outOfStockItems = [];
+    for (const item of orderItems) {
+      const productId = item.product_id || item.id;
+      const requestedQty = item.units || item.qty || 1;
+      const currentStock = stockData[productId]?.available || 0;
+      
+      if (currentStock <= 0) {
+        outOfStockItems.push({
+          productId: productId,
+          name: item.name || item.title,
+          available: currentStock,
+          requested: requestedQty
+        });
+      } else if (currentStock < requestedQty) {
+        outOfStockItems.push({
+          productId: productId,
+          name: item.name || item.title,
+          available: currentStock,
+          requested: requestedQty
+        });
+      }
+    }
+    
+    // If out of stock, reject the payment
+    if (outOfStockItems.length > 0) {
+      console.error("❌ OUT OF STOCK ERROR - Payment Rejected:", outOfStockItems);
+      return res.status(400).json({ 
+        ok: false, 
+        message: 'Product out of stock or insufficient quantity',
+        outOfStockItems: outOfStockItems
+      });
+    }
+    
+    console.log("✅ Stock Check Passed - All items in stock");
+
     const invoices = [];
     // Support both 'meta' (from old code) and 'invoicePayload' (from test_checkout.html)
     let payloads = [];
@@ -541,6 +599,43 @@ app.post('/api/payment/verify', async (req, res) => {
           console.log("✅ ORDER SAVED TO DB - ID:", order.id);
           console.log("✅ Buyer Email:", order.buyerEmail);
           console.log("✅ Amount:", order.amount);
+          
+          // 🔴 NEW: Deduct Stock After Payment Success
+          try {
+            console.log("\n📦 DEDUCTING STOCK FOR PURCHASED ITEMS");
+            let stockDataToUpdate = {};
+            if (fs.existsSync(stockFile)) {
+              stockDataToUpdate = JSON.parse(fs.readFileSync(stockFile, 'utf8'));
+            }
+            
+            // Get order items and deduct stock
+            let itemsToDeduct = [];
+            if (payload.invoice && payload.invoice.items) {
+              itemsToDeduct = payload.invoice.items;
+            } else if (invoicePayload && invoicePayload.order_items) {
+              itemsToDeduct = invoicePayload.order_items;
+            }
+            
+            for (const item of itemsToDeduct) {
+              const productId = item.product_id || item.id;
+              const qtyToDeduct = item.qty || item.units || 1;
+              
+              if (stockDataToUpdate[productId]) {
+                const oldAvailable = stockDataToUpdate[productId].available;
+                stockDataToUpdate[productId].available = Math.max(0, oldAvailable - qtyToDeduct);
+                stockDataToUpdate[productId].sold = (stockDataToUpdate[productId].sold || 0) + qtyToDeduct;
+                stockDataToUpdate[productId].lastUpdated = new Date().toISOString();
+                console.log(`✅ Stock Updated - ${productId}: ${oldAvailable} → ${stockDataToUpdate[productId].available} (Sold: ${qtyToDeduct})`);
+              }
+            }
+            
+            // Save updated stock
+            fs.writeFileSync(stockFile, JSON.stringify(stockDataToUpdate, null, 2));
+            console.log("✅ STOCK DEDUCTION COMPLETED AND SAVED");
+          } catch (stockError) {
+            console.warn("⚠️  Stock deduction warning (non-critical):", stockError.message);
+          }
+          
         } catch (dbError) {
           console.error("❌ DATABASE ERROR:", dbError);
           console.error("Error message:", dbError.message);
