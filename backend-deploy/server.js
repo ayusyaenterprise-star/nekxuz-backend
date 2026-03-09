@@ -1,4 +1,11 @@
-require('dotenv').config();
+// Load .env file if environment variables are not already set
+// This allows Render to override with its own env vars, but falls back to .env for local dev
+const dotenv = require('dotenv');
+const result = dotenv.config();
+if (result.error && process.env.NODE_ENV !== 'production') {
+  console.warn('⚠️ No .env file found, using system environment variables');
+}
+
 const express = require('express');
 const Razorpay = require('razorpay');
 const bodyParser = require('body-parser');
@@ -16,6 +23,14 @@ const { PrismaClient } = require('@prisma/client');
 const shiprocket = require('./shiprocket');
 
 const prisma = new PrismaClient();
+
+// Verify Prisma connection
+prisma.$connect().then(() => {
+  console.log("✅ Prisma Database Connected Successfully");
+}).catch(err => {
+  console.error("❌ PRISMA CONNECTION ERROR:", err.message);
+  console.error("DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
+});
 
 // 🔥 UNIQUE BUILD MARKER - Testing if Render picks up new deployments from backend-deploy/
 const BUILD_ID = 'BACKEND_DEPLOY_CORS_FIX_' + Date.now();
@@ -345,6 +360,12 @@ app.get('/api/orders', async (req, res) => {
       return res.status(400).json({ error: "email parameter required" });
     }
 
+    // Verify prisma is initialized
+    if (!prisma) {
+      console.error("❌ PRISMA NOT INITIALIZED");
+      return res.status(500).json({ error: "Database not initialized", ok: false });
+    }
+
     // Query orders by customer email
     const orders = await prisma.order.findMany({
       where: {
@@ -357,6 +378,8 @@ app.get('/api/orders', async (req, res) => {
       orderBy: { createdAt: 'desc' },
       take: 50
     });
+
+    console.log(`✅ Orders fetched for email ${email}:`, orders.length);
 
     // Return filtered orders
     res.json({ 
