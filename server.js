@@ -1,6 +1,9 @@
-// Load .env only if not in production (Render sets env vars directly)
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
+// Load .env file if environment variables are not already set
+// This allows Render to override with its own env vars, but falls back to .env for local dev
+const dotenv = require('dotenv');
+const result = dotenv.config();
+if (result.error && process.env.NODE_ENV !== 'production') {
+  console.warn('⚠️ No .env file found, using system environment variables');
 }
 
 const express = require('express');
@@ -19,7 +22,18 @@ const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const shiprocket = require('./shiprocket');
 
-const prisma = new PrismaClient();
+console.log("🔍 DEBUG: About to initialize Prisma...");
+console.log("DATABASE_URL SET:", !!process.env.DATABASE_URL);
+console.log("DATABASE_URL PREVIEW:", process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) : "NOT SET");
+
+let prisma;
+try {
+  prisma = new PrismaClient();
+  console.log("✅ PrismaClient instantiated successfully");
+} catch (err) {
+  console.error("❌ ERROR instantiating PrismaClient:", err.message);
+  process.exit(1);
+}
 
 // Verify Prisma connection
 prisma.$connect().then(() => {
@@ -27,6 +41,7 @@ prisma.$connect().then(() => {
 }).catch(err => {
   console.error("❌ PRISMA CONNECTION ERROR:", err.message);
   console.error("DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
+  console.error("Full error:", err);
 });
 
 // 🔥 UNIQUE BUILD MARKER - Testing if Render picks up new deployments from backend-deploy/
@@ -271,14 +286,22 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Request Logger - BEFORE API routes so they log all requests
+// Define build path globally
+const buildPath = path.join(__dirname, 'build');
+
+// Serve React build (if it exists) - BEFORE public for priority
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+}
+
+// Serve static files from public folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Request Logger
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
-
-// NOTE: Static file serving removed - this is a backend API server
-// The public/ and build/ folders are for frontend which is hosted separately on Hostinger
 
 const PORT = process.env.PORT || 3002;
 
@@ -298,7 +321,20 @@ try {
 // --- API ENDPOINTS ---
 
 app.get('/', (req, res) => {
-    res.json({ status: 'ok', message: 'Nekxuz Backend Running from backend-deploy/', buildId: BUILD_ID, corsMiddleware: 'ENABLED' });
+    res.json({ 
+        status: 'ok', 
+        message: 'Nekxuz Backend Running from backend-deploy/', 
+        buildId: BUILD_ID, 
+        corsMiddleware: 'ENABLED',
+        timestamp: new Date().toISOString(),
+        prisma_status: prisma ? "INITIALIZED" : "NULL",
+        prisma_type: typeof prisma,
+        database_url_set: !!process.env.DATABASE_URL,
+        razorpay_key_set: !!process.env.RAZORPAY_KEY_ID,
+        database_url_preview: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET',
+        node_version: process.version,
+        npm_version: process.env.npm_version || "unknown"
+    });
 });
 
 app.post('/api/payment/create-order', async (req, res) => {
@@ -351,10 +387,18 @@ app.get('/api/orders', async (req, res) => {
 
     // Verify prisma is initialized
     if (!prisma) {
-      console.error("❌ PRISMA NOT INITIALIZED");
-      return res.status(500).json({ error: "Database not initialized", ok: false });
+      console.error("❌ PRISMA NOT INITIALIZED - prisma variable is null/undefined");
+      return res.status(500).json({ error: "Prisma not initialized", prisma_type: typeof prisma, ok: false });
     }
 
+    // Check if order method exists
+    if (!prisma.order) {
+      console.error("❌ prisma.order is undefined");
+      return res.status(500).json({ error: "prisma.order not available", prisma_keys: Object.keys(prisma), ok: false });
+    }
+
+    console.log(`📦 Fetching orders for: ${email}`);
+    
     // Query orders by customer email
     const orders = await prisma.order.findMany({
       where: {
@@ -412,60 +456,6 @@ app.post('/api/payment/verify', async (req, res) => {
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || '');
     const digest = hmac.update(razorpay_order_id + '|' + razorpay_payment_id).digest('hex');
     if (digest !== razorpay_signature) return res.status(400).json({ ok: false, message: 'Invalid signature' });
-
-    // 🔴 NEW: Check Stock Availability Before Payment Completion
-    const stockFile = path.join(__dirname, 'stock.json');
-    let stockData = {};
-    if (fs.existsSync(stockFile)) {
-      stockData = JSON.parse(fs.readFileSync(stockFile, 'utf8'));
-    }
-    
-    // Get order items for stock check
-    let orderItems = [];
-    if (invoicePayload && invoicePayload.order_items) {
-      orderItems = invoicePayload.order_items;
-    } else if (meta && meta.precomputedInvoices && meta.precomputedInvoices[0]) {
-      const firstInvoice = meta.precomputedInvoices[0];
-      if (firstInvoice.invoice && firstInvoice.invoice.items) {
-        orderItems = firstInvoice.invoice.items;
-      }
-    }
-    
-    // Check if all items are in stock
-    let outOfStockItems = [];
-    for (const item of orderItems) {
-      const productId = item.product_id || item.id;
-      const requestedQty = item.units || item.qty || 1;
-      const currentStock = stockData[productId]?.available || 0;
-      
-      if (currentStock <= 0) {
-        outOfStockItems.push({
-          productId: productId,
-          name: item.name || item.title,
-          available: currentStock,
-          requested: requestedQty
-        });
-      } else if (currentStock < requestedQty) {
-        outOfStockItems.push({
-          productId: productId,
-          name: item.name || item.title,
-          available: currentStock,
-          requested: requestedQty
-        });
-      }
-    }
-    
-    // If out of stock, reject the payment
-    if (outOfStockItems.length > 0) {
-      console.error("❌ OUT OF STOCK ERROR - Payment Rejected:", outOfStockItems);
-      return res.status(400).json({ 
-        ok: false, 
-        message: 'Product out of stock or insufficient quantity',
-        outOfStockItems: outOfStockItems
-      });
-    }
-    
-    console.log("✅ Stock Check Passed - All items in stock");
 
     const invoices = [];
     // Support both 'meta' (from old code) and 'invoicePayload' (from test_checkout.html)
@@ -615,43 +605,6 @@ app.post('/api/payment/verify', async (req, res) => {
           console.log("✅ ORDER SAVED TO DB - ID:", order.id);
           console.log("✅ Buyer Email:", order.buyerEmail);
           console.log("✅ Amount:", order.amount);
-          
-          // 🔴 NEW: Deduct Stock After Payment Success
-          try {
-            console.log("\n📦 DEDUCTING STOCK FOR PURCHASED ITEMS");
-            let stockDataToUpdate = {};
-            if (fs.existsSync(stockFile)) {
-              stockDataToUpdate = JSON.parse(fs.readFileSync(stockFile, 'utf8'));
-            }
-            
-            // Get order items and deduct stock
-            let itemsToDeduct = [];
-            if (payload.invoice && payload.invoice.items) {
-              itemsToDeduct = payload.invoice.items;
-            } else if (invoicePayload && invoicePayload.order_items) {
-              itemsToDeduct = invoicePayload.order_items;
-            }
-            
-            for (const item of itemsToDeduct) {
-              const productId = item.product_id || item.id;
-              const qtyToDeduct = item.qty || item.units || 1;
-              
-              if (stockDataToUpdate[productId]) {
-                const oldAvailable = stockDataToUpdate[productId].available;
-                stockDataToUpdate[productId].available = Math.max(0, oldAvailable - qtyToDeduct);
-                stockDataToUpdate[productId].sold = (stockDataToUpdate[productId].sold || 0) + qtyToDeduct;
-                stockDataToUpdate[productId].lastUpdated = new Date().toISOString();
-                console.log(`✅ Stock Updated - ${productId}: ${oldAvailable} → ${stockDataToUpdate[productId].available} (Sold: ${qtyToDeduct})`);
-              }
-            }
-            
-            // Save updated stock
-            fs.writeFileSync(stockFile, JSON.stringify(stockDataToUpdate, null, 2));
-            console.log("✅ STOCK DEDUCTION COMPLETED AND SAVED");
-          } catch (stockError) {
-            console.warn("⚠️  Stock deduction warning (non-critical):", stockError.message);
-          }
-          
         } catch (dbError) {
           console.error("❌ DATABASE ERROR:", dbError);
           console.error("Error message:", dbError.message);
@@ -1281,8 +1234,13 @@ app.get('/api/support/whatsapp', (req, res) => {
   }
 });
 
-// NOTE: React client-side routing removed - this is API-only backend
-// Frontend is hosted separately on Hostinger at https://nekxuz.in
+// Serve React app for all other routes (client-side routing)
+const indexPath = path.join(buildPath, 'index.html');
+if (fs.existsSync(indexPath)) {
+  app.get(/^(?!\/api\/)/, (req, res) => {
+    res.sendFile(indexPath);
+  });
+}
 
 // Test database connection
 async function testDatabase() {
