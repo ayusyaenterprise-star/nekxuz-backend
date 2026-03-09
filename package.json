@@ -1,6 +1,6 @@
 {
   "name": "nekxuz-backend",
-  "version": "2.0.0-api-only",
+  "version": "2.0.1-api-only",
   "description": "Nekxuz Backend API Server",
   "main": "server.js",
   "private": true,
