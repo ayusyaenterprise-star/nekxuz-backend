@@ -1,6 +1,3 @@
-// Prisma schema file
-// PostgreSQL Database Connection
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,90 +7,55 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
-  refreshToken        String?
-  refreshTokenExpires DateTime?
-}
-
 model Order {
-  id                String   @id @default(cuid())
-  invoice           String?
-  amount            Float
-  currency          String   @default("INR")
-  status            String   @default("pending")
-  subtotal          Float    @default(0)
-  tax               Float    @default(0)
-  shippingCharges   Float    @default(0)
-  
-  // Buyer Information
-  buyerName         String?
-  buyerEmail        String?
-  buyerPhone        String?
-  buyerAddress      String?
-  buyerCity         String?
-  buyerState        String?
-  buyerPincode      String?
-  
-  // Relations
-  payments          Payment[]
-  shipment          Shipment?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  @@index([buyerEmail])
-  @@index([status])
+  id              String   @id @default(uuid())
+  invoice         String   @unique
+  amount          Float
+  currency        String   @default("INR")
+  status          String   @default("created")
+  shippingCost    Float?
+  subtotal        Float?
+  tax             Float?
+  shippingCharges Float?
+  buyerName       String?
+  buyerEmail      String?
+  buyerPhone      String?
+  buyerAddress    String?
+  buyerCity       String?
+  buyerState      String?
+  buyerPincode    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  payments        Payment[]
+  shipment        Shipment?
 }
 
 model Payment {
-  id                    String   @id @default(cuid())
-  orderId               String
-  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
-  razorpayOrderId       String?
-  razorpayPaymentId     String?
-  razorpaySignature     String?
-  
-  amount                Float
-  currency              String   @default("INR")
-  status                String   @default("pending")
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
-  @@index([orderId])
-  @@index([razorpayPaymentId])
+  id                 String   @id @default(uuid())
+  orderId            String
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+  razorpaySignature  String?
+  status             String   @default("created")
+  amount             Float
+  currency           String   @default("INR")
+  createdAt          DateTime @default(now())
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Shipment {
-  id                String   @id @default(cuid())
-  orderId           String   @unique
-  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
-  shiprocketId      String?
-  awb               String?
-  courier           String?
-  status            String   @default("pending")
-  trackingUrl       String?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  @@index([orderId])
-  @@index([shiprocketId])
+  id               String   @id @default(uuid())
+  orderId          String   @unique
+  shiprocketId     String?
+  awb              String?
+  courier          String?
+  status           String   @default("created")
+  payload          String?
+  idempotencyKey   String?  @unique
+  shiprocketJobId  String?
+  failureCount     Int?     @default(0)
+  lastError        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
