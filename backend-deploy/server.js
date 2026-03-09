@@ -22,7 +22,18 @@ const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const shiprocket = require('./shiprocket');
 
-const prisma = new PrismaClient();
+console.log("🔍 DEBUG: About to initialize Prisma...");
+console.log("DATABASE_URL SET:", !!process.env.DATABASE_URL);
+console.log("DATABASE_URL PREVIEW:", process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) : "NOT SET");
+
+let prisma;
+try {
+  prisma = new PrismaClient();
+  console.log("✅ PrismaClient instantiated successfully");
+} catch (err) {
+  console.error("❌ ERROR instantiating PrismaClient:", err.message);
+  process.exit(1);
+}
 
 // Verify Prisma connection
 prisma.$connect().then(() => {
@@ -30,6 +41,7 @@ prisma.$connect().then(() => {
 }).catch(err => {
   console.error("❌ PRISMA CONNECTION ERROR:", err.message);
   console.error("DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
+  console.error("Full error:", err);
 });
 
 // 🔥 UNIQUE BUILD MARKER - Testing if Render picks up new deployments from backend-deploy/
@@ -370,10 +382,18 @@ app.get('/api/orders', async (req, res) => {
 
     // Verify prisma is initialized
     if (!prisma) {
-      console.error("❌ PRISMA NOT INITIALIZED");
-      return res.status(500).json({ error: "Database not initialized", ok: false });
+      console.error("❌ PRISMA NOT INITIALIZED - prisma variable is null/undefined");
+      return res.status(500).json({ error: "Prisma not initialized", prisma_type: typeof prisma, ok: false });
     }
 
+    // Check if order method exists
+    if (!prisma.order) {
+      console.error("❌ prisma.order is undefined");
+      return res.status(500).json({ error: "prisma.order not available", prisma_keys: Object.keys(prisma), ok: false });
+    }
+
+    console.log(`📦 Fetching orders for: ${email}`);
+    
     // Query orders by customer email
     const orders = await prisma.order.findMany({
       where: {
