@@ -309,7 +309,15 @@ try {
 // --- API ENDPOINTS ---
 
 app.get('/', (req, res) => {
-    res.json({ status: 'ok', message: 'Nekxuz Backend Running from backend-deploy/', buildId: BUILD_ID, corsMiddleware: 'ENABLED' });
+    res.json({ 
+        status: 'ok', 
+        message: 'Nekxuz Backend Running from backend-deploy/', 
+        buildId: BUILD_ID, 
+        corsMiddleware: 'ENABLED',
+        database_url_set: !!process.env.DATABASE_URL,
+        razorpay_key_set: !!process.env.RAZORPAY_KEY_ID,
+        database_url_preview: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET'
+    });
 });
 
 app.post('/api/payment/create-order', async (req, res) => {
