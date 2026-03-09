@@ -326,9 +326,14 @@ app.get('/', (req, res) => {
         message: 'Nekxuz Backend Running from backend-deploy/', 
         buildId: BUILD_ID, 
         corsMiddleware: 'ENABLED',
+        timestamp: new Date().toISOString(),
+        prisma_status: prisma ? "INITIALIZED" : "NULL",
+        prisma_type: typeof prisma,
         database_url_set: !!process.env.DATABASE_URL,
         razorpay_key_set: !!process.env.RAZORPAY_KEY_ID,
-        database_url_preview: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET'
+        database_url_preview: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET',
+        node_version: process.version,
+        npm_version: process.env.npm_version || "unknown"
     });
 });
 
