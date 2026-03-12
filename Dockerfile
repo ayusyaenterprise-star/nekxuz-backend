@@ -1,6 +1,7 @@
 # Dockerfile for Nekxuz Backend API Server
 # Backend-only, no frontend build
 # Uses node:18-alpine for small image size
+# Force rebuild timestamp: 2026-03-09-14:15
 
 FROM node:18-alpine
 
