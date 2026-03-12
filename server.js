@@ -337,6 +337,18 @@ app.get('/', (req, res) => {
     });
 });
 
+app.get('/debug/prisma', (req, res) => {
+    const models = Object.keys(prisma).filter(k => !k.startsWith('_') && k !== '$parent');
+    const hasOrder = !!prisma.order;
+    res.json({ 
+        models: models,
+        has_order_model: hasOrder,
+        total_models: models.length,
+        prisma_initialized: !!prisma,
+        schema_file: 'Using prisma/schema.prisma or backend-deploy/prisma/schema.prisma'
+    });
+});
+
 app.post('/api/payment/create-order', async (req, res) => {
   try {
     console.log("Create Order Request Body:", req.body);
