@@ -1,0 +1,6 @@
+REBUILD TRIGGER
+Date: 2026-03-09 15:35 UTC
+Purpose: Force Render to pull latest git and rebuild Docker image
+
+Status: Triggering full rebuild with new Prisma schema including Order, Payment, Shipment tables
+Expected: All tables should be created on PostgreSQL database
