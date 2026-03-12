@@ -1,7 +1,7 @@
 # Dockerfile for Nekxuz Backend API Server
 # Backend-only, no frontend build
 # Uses node:18-alpine for small image size
-# Force rebuild timestamp: 2026-03-09-15:30
+# Force rebuild timestamp: 2026-03-12-19:50
 
 FROM node:18-alpine
 
@@ -16,13 +16,16 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Copy Prisma schema to proper location
+RUN mkdir -p prisma
+COPY schema.prisma prisma/
+
 # Install dependencies (including dev deps for prisma generate)
 RUN npm install --legacy-peer-deps
 
 # Copy backend server files
 COPY server.js .
 COPY shiprocket.js .
-COPY prisma ./prisma
 COPY .env* ./
 
 # Generate Prisma client (required for Prisma ORM to work)
