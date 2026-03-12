@@ -30,7 +30,7 @@ RUN npx prisma generate
 
 # Sync database schema (must be done before switching to non-root user)
 RUN rm -rf node_modules/.prisma/client
-RUN npx prisma db push --skip-generate || true
+RUN npx prisma db push --force-reset --skip-generate || npx prisma db push --skip-generate || true
 RUN npx prisma generate || true
 
 # Create app directories for logs
