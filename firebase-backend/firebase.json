@@ -1,0 +1,24 @@
+{
+  "projects": {
+    "default": "nekxuz-firebase"
+  },
+  "hosting": {
+    "site": "nekxuz-api",
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "function": "api"
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  }
+}
