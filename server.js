@@ -3,8 +3,54 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const cors = require('cors');
 const admin = require('firebase-admin');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
+
+// Create data directory for storing orders as JSON
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Helper function to save order to JSON file
+function saveOrderToFile(orderId, orderData) {
+  try {
+    const ordersFile = path.join(dataDir, 'orders.json');
+    let orders = {};
+    
+    if (fs.existsSync(ordersFile)) {
+      orders = JSON.parse(fs.readFileSync(ordersFile, 'utf8'));
+    }
+    
+    orders[orderId] = orderData;
+    fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2));
+    console.log(`✅ Order ${orderId} saved to file`);
+  } catch (error) {
+    console.error('Error saving order to file:', error);
+  }
+}
+
+// Helper function to get orders by email from JSON file
+function getOrdersByEmailFromFile(email) {
+  try {
+    const ordersFile = path.join(dataDir, 'orders.json');
+    if (!fs.existsSync(ordersFile)) {
+      return [];
+    }
+    
+    const orders = JSON.parse(fs.readFileSync(ordersFile, 'utf8'));
+    const userOrders = Object.values(orders)
+      .filter(order => order.email === email)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    return userOrders;
+  } catch (error) {
+    console.error('Error reading orders from file:', error);
+    return [];
+  }
+}
 
 // Middleware
 app.use(cors());
@@ -123,23 +169,25 @@ app.post('/api/verify', async (req, res) => {
       });
     }
 
-    // Save to Firebase Firestore
+    // Save order data
+    const orderData = {
+      orderId,
+      invoiceNumber,
+      email,
+      amount,
+      status: 'completed',
+      razorpayOrderId,
+      razorpayPaymentId,
+      cartItems,
+      shippingAddress,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Try Firebase first
     if (db) {
       try {
-        await db.collection('orders').doc(orderId).set({
-          orderId,
-          invoiceNumber,
-          email,
-          amount,
-          status: 'completed',
-          razorpayOrderId,
-          razorpayPaymentId,
-          cartItems,
-          shippingAddress,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-
+        await db.collection('orders').doc(orderId).set(orderData);
         await db.collection('payments').doc(razorpayPaymentId).set({
           razorpayOrderId,
           razorpayPaymentId,
@@ -148,11 +196,15 @@ app.post('/api/verify', async (req, res) => {
           status: 'captured',
           createdAt: new Date().toISOString()
         });
-
         console.log(`✅ Order ${orderId} saved to Firestore`);
       } catch (firebaseError) {
         console.error('Firebase error:', firebaseError);
+        // Fallback to file storage
+        saveOrderToFile(orderId, orderData);
       }
+    } else {
+      // No Firebase, use file storage
+      saveOrderToFile(orderId, orderData);
     }
 
     res.json({
@@ -182,26 +234,32 @@ app.get('/api/orders', async (req, res) => {
       });
     }
 
-    if (!db) {
-      return res.status(500).json({
-        ok: false,
-        error: 'Database not connected'
-      });
+    // Try Firebase first
+    let orders = [];
+    if (db) {
+      try {
+        const ordersSnapshot = await db
+          .collection('orders')
+          .where('email', '==', email)
+          .orderBy('createdAt', 'desc')
+          .get();
+
+        ordersSnapshot.forEach(doc => {
+          orders.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        console.log(`✅ Fetched ${orders.length} orders from Firestore for ${email}`);
+      } catch (firebaseError) {
+        console.error('Firebase fetch error:', firebaseError);
+        // Fallback to file storage
+        orders = getOrdersByEmailFromFile(email);
+      }
+    } else {
+      // No Firebase, use file storage
+      orders = getOrdersByEmailFromFile(email);
     }
-
-    const ordersSnapshot = await db
-      .collection('orders')
-      .where('email', '==', email)
-      .orderBy('createdAt', 'desc')
-      .get();
-
-    const orders = [];
-    ordersSnapshot.forEach(doc => {
-      orders.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
 
     res.json({
       ok: true,
