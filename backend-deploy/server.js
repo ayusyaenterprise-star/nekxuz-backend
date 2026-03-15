@@ -45,7 +45,7 @@ prisma.$connect().then(() => {
 });
 
 // 🔥 UNIQUE BUILD MARKER - Testing if Render picks up new deployments from backend-deploy/
-const BUILD_ID = 'BACKEND_DEPLOY_CORS_FIX_' + Date.now();
+const BUILD_ID = 'PRISMA_CLIENT_REGEN_' + Date.now();
 console.log(`✅ Backend Server starting with BUILD_ID: ${BUILD_ID}`);
 
 // --- HSN & GST CONFIGURATION ---

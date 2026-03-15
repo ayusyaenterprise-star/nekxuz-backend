@@ -9,7 +9,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // --- Configuration ---
 const apiKey = ""; // Gemini API Key
-const API_BASE_URL = "https://nekxuz-backend-j1sj.vercel.app"; // Backend URL for API calls (Production)
+const API_BASE_URL = "https://nekxuz-backends.onrender.com"; // Backend URL for API calls (Production - Correct Render backend with 's')
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
