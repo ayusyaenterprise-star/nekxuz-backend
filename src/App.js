@@ -9,7 +9,20 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // --- Configuration ---
 const apiKey = ""; // Gemini API Key
-const API_BASE_URL = "https://nekxuz-backend-j1sj.vercel.app"; // Backend URL for API calls (FREE Vercel serverless)
+
+// 🚀 AUTO-DETECT BACKEND - Try Hostinger first, fallback to alternatives
+const BACKEND_OPTIONS = [
+  "https://api.nekxuz.in",           // ✅ PRIMARY: Hostinger (FREE, included in hosting)
+  "https://nekxuz-backends.onrender.com" // ❌ FALLBACK: Old Render (deprecated, may be suspended)
+];
+
+// Try to use Hostinger backend first
+let API_BASE_URL = BACKEND_OPTIONS[0];
+
+// If needed, can override with environment variable
+if (process.env.REACT_APP_API_BASE_URL) {
+  API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+}
 
 // --- Firebase Configuration ---
 const firebaseConfig = {

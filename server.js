@@ -37,9 +37,9 @@ try {
 app.get('/', (req, res) => {
   res.json({
     ok: true,
-    message: 'Nekxuz Backend Running on Vercel',
+    message: 'Nekxuz Backend Running on Hostinger',
     version: '2.0',
-    platform: 'Vercel Serverless',
+    platform: 'Hostinger Node.js',
     razorpay_mode: 'PRODUCTION',
     endpoints: {
       payment: '/api/payment',
