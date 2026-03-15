@@ -11,11 +11,5 @@
       "src": "/(.*)",
       "dest": "server-vercel.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "RAZORPAY_KEY_ID": "@razorpay_key_id",
-    "RAZORPAY_KEY_SECRET": "@razorpay_key_secret",
-    "FIREBASE_PROJECT_ID": "nekxuz-27e49"
-  }
+  ]
 }
