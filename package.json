@@ -2,7 +2,7 @@
   "name": "nekxuz-backend",
   "version": "2.0.1-api-only",
   "description": "Nekxuz Backend API Server",
-  "main": "server.js",
+  "main": "server-simple-pg.js",
   "private": true,
   "engines": {
     "node": "24.x"
@@ -22,12 +22,30 @@
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^7.0.12",
     "pdfkit": "^0.17.2",
+    "pg": "^8.20.0",
     "prisma": "^5.0.0",
     "razorpay": "^2.9.6"
   },
   "scripts": {
-    "start": "npx prisma db push --force-reset --skip-generate || npx prisma db push --skip-generate || true && npx prisma generate && node server.js",
+    "start": "node server-simple-pg.js",
     "dev": "node server.js",
     "build": "npm install"
+  },
+  "devDependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-scripts": "^5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
