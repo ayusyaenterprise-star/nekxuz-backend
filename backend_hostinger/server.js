@@ -15,7 +15,14 @@ const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const shiprocket = require('./shiprocket');
 
-const prisma = new PrismaClient();
+// Initialize Prisma with connection pool optimization
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+});
 
 // --- HSN & GST CONFIGURATION ---
 const HSN_RATES = {
@@ -325,6 +332,9 @@ app.get('/api/orders', async (req, res) => {
       return res.status(400).json({ error: "email parameter required" });
     }
 
+    // DEBUG: Log the incoming request
+    console.log(`[/api/orders] Received email: "${email}"`);
+
     // Query orders by customer email
     const orders = await prisma.order.findMany({
       where: {
@@ -337,6 +347,9 @@ app.get('/api/orders', async (req, res) => {
       orderBy: { createdAt: 'desc' },
       take: 50
     });
+    
+    // DEBUG: Log query results
+    console.log(`[/api/orders] Database returned ${orders.length} orders for "${email}"`);
 
     // Return filtered orders
     res.json({ 
@@ -1171,6 +1184,13 @@ async function testDatabase() {
   try {
     const count = await prisma.order.count();
     console.log(`✅ DATABASE CONNECTED - ${count} total orders in database`);
+    
+    // Also check for test email
+    const testEmail = 'infodevayushenterprise@gmail.com';
+    const emailOrders = await prisma.order.count({
+      where: { buyerEmail: testEmail }
+    });
+    console.log(`   └─ Found ${emailOrders} orders for: ${testEmail}`);
   } catch (err) {
     console.error("❌ DATABASE CONNECTION FAILED:", err.message);
   }
@@ -1189,10 +1209,20 @@ app.listen(PORT, '0.0.0.0', async () => {
   await testDatabase();
 });
 
+// Graceful shutdown
+async function gracefulShutdown() {
+  console.log('Shutting down gracefully...');
+  await prisma.$disconnect();
+  process.exit(0);
+}
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
 // Error handling
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  process.exit(1);
+  gracefulShutdown();
 });
 
 process.on('unhandledRejection', (reason, promise) => {

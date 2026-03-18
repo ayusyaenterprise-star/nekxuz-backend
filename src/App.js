@@ -10,14 +10,11 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 // --- Configuration ---
 const apiKey = ""; // Gemini API Key
 
-// 🚀 AUTO-DETECT BACKEND - Try Hostinger first, fallback to alternatives
-const BACKEND_OPTIONS = [
-  "https://api.nekxuz.in",           // ✅ PRIMARY: Hostinger (FREE, included in hosting)
-  "https://nekxuz-backends.onrender.com" // ❌ FALLBACK: Old Render (deprecated, may be suspended)
-];
+// 🚀 BACKEND CONFIGURATION
+// Using Hostinger backend (FREE tier included with hosting)
+const API_BASE_URL_PRIMARY = "https://nekxuz-backend.onrender.com";
 
-// Try to use Hostinger backend first
-let API_BASE_URL = BACKEND_OPTIONS[0];
+let API_BASE_URL = API_BASE_URL_PRIMARY;
 
 // If needed, can override with environment variable
 if (process.env.REACT_APP_API_BASE_URL) {
