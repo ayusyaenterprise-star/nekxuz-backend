@@ -9,9 +9,26 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Client, Pool } = require('pg');
+const Razorpay = require('razorpay');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+
+// Initialize Razorpay
+let razorpay;
+try {
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET
+    });
+    console.log('✅ Razorpay initialized');
+  } else {
+    console.warn('⚠️ Razorpay keys not set - payments will fail');
+  }
+} catch (err) {
+  console.error('❌ Razorpay initialization failed:', err.message);
+}
 
 console.log('='.repeat(60));
 console.log('🚀 Nekxuz Backend Starting...');
@@ -216,6 +233,224 @@ app.get('/api/order/:orderId', async (req, res) => {
   }
 });
 
+// Create Razorpay Order for Payment
+app.post('/api/payment/create-order', async (req, res) => {
+  try {
+    console.log('💳 POST /api/payment/create-order');
+    
+    if (!razorpay) {
+      return res.status(500).json({ error: 'Razorpay not initialized' });
+    }
+
+    const { amount, currency = 'INR', invoiceNumber } = req.body;
+    
+    if (!amount || isNaN(amount)) {
+      return res.status(400).json({ error: 'Valid amount is required' });
+    }
+
+    const options = {
+      amount: Math.round(amount * 100), // amount in smallest currency unit
+      currency,
+      receipt: invoiceNumber || 'REC-' + Date.now(),
+    };
+
+    console.log('   Creating Razorpay order:', { amount, currency });
+    const order = await razorpay.orders.create(options);
+    console.log(`   ✅ Order created: ${order.id}`);
+    
+    res.json({
+      id: order.id,
+      currency: order.currency,
+      amount: order.amount
+    });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ 
+      error: err.message,
+      ok: false
+    });
+  }
+});
+
+// Verify Razorpay Payment
+app.post('/api/payment/verify', async (req, res) => {
+  try {
+    console.log('✅ POST /api/payment/verify');
+    
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, invoicePayload } = req.body;
+    
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: 'Missing payment details' });
+    }
+
+    // Verify signature
+    const crypto = require('crypto');
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      console.error('   ❌ Signature mismatch');
+      return res.status(400).json({ error: 'Payment verification failed' });
+    }
+
+    console.log(`   ✅ Payment verified: ${razorpay_payment_id}`);
+
+    // Save order to database
+    if (invoicePayload && pool) {
+      try {
+        const {
+          billing_customer_name,
+          billing_email,
+          billing_address,
+          billing_city,
+          billing_state,
+          billing_pincode,
+          billing_phone,
+          shipping_charges
+        } = invoicePayload;
+
+        // Calculate subtotal and tax from order items
+        let subtotal = 0;
+        if (invoicePayload.order_items && Array.isArray(invoicePayload.order_items)) {
+          subtotal = invoicePayload.order_items.reduce((sum, item) => {
+            return sum + ((item.selling_price || 0) * (item.units || 1));
+          }, 0);
+        }
+
+        const tax = Math.round(subtotal * 0.09); // 9% GST
+        const shippingCost = shipping_charges || 0;
+        const totalAmount = subtotal + tax + shippingCost;
+
+        // Insert order
+        const result = await pool.query(
+          `INSERT INTO "Order" (
+            id, invoice, amount, currency, status, 
+            subtotal, tax, "shippingCharges", 
+            "buyerName", "buyerEmail", "buyerPhone", 
+            "buyerAddress", "buyerCity", "buyerState", "buyerPincode",
+            "createdAt", "updatedAt"
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+          ON CONFLICT (id) DO UPDATE SET status = $5, "updatedAt" = NOW()
+          RETURNING *`,
+          [
+            razorpay_payment_id,
+            `invoice_${razorpay_payment_id}`,
+            totalAmount,
+            'INR',
+            'paid',
+            subtotal,
+            tax,
+            shippingCost,
+            billing_customer_name,
+            billing_email,
+            billing_phone,
+            billing_address,
+            billing_city,
+            billing_state,
+            billing_pincode
+          ]
+        );
+
+        console.log(`   💾 Order saved to database: ${razorpay_payment_id}`);
+
+        return res.json({
+          ok: true,
+          message: 'Payment verified and order saved',
+          orderId: razorpay_payment_id,
+          invoice: `invoice_${razorpay_payment_id}`
+        });
+      } catch (dbErr) {
+        console.error('   ⚠️ Database save error:', dbErr.message);
+        // Still return success even if DB save fails
+        return res.json({
+          ok: true,
+          message: 'Payment verified (database save pending)',
+          orderId: razorpay_payment_id,
+          invoice: `invoice_${razorpay_payment_id}`
+        });
+      }
+    }
+
+    res.json({
+      ok: true,
+      message: 'Payment verified successfully',
+      orderId: razorpay_payment_id,
+      invoice: `invoice_${razorpay_payment_id}`
+    });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ 
+      error: err.message,
+      ok: false
+    });
+  }
+});
+
+// Save Order to Database
+app.post('/api/orders/save', async (req, res) => {
+  try {
+    console.log('💾 POST /api/orders/save');
+    
+    const {
+      id,
+      invoice,
+      amount,
+      currency,
+      status,
+      subtotal,
+      tax,
+      shippingCharges,
+      buyerName,
+      buyerEmail,
+      buyerPhone,
+      buyerAddress,
+      buyerCity,
+      buyerState,
+      buyerPincode
+    } = req.body;
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not connected' });
+    }
+
+    // Insert or update order
+    const result = await pool.query(
+      `INSERT INTO "Order" (
+        id, invoice, amount, currency, status, 
+        subtotal, tax, "shippingCharges", 
+        "buyerName", "buyerEmail", "buyerPhone", 
+        "buyerAddress", "buyerCity", "buyerState", "buyerPincode",
+        "createdAt", "updatedAt"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+      ON CONFLICT (id) DO UPDATE SET 
+        status = $5, 
+        "updatedAt" = NOW()
+      RETURNING *`,
+      [
+        id, invoice, amount, currency, status,
+        subtotal, tax, shippingCharges,
+        buyerName, buyerEmail, buyerPhone,
+        buyerAddress, buyerCity, buyerState, buyerPincode
+      ]
+    );
+
+    console.log(`   ✅ Order saved: ${id}`);
+    res.json({
+      ok: true,
+      order: result.rows[0],
+      message: 'Order saved successfully'
+    });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ 
+      error: err.message,
+      ok: false
+    });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
@@ -252,6 +487,9 @@ async function start() {
     console.log(`   GET  /api/orders?email=user@example.com`);
     console.log(`   GET  /api/orders/all`);
     console.log(`   GET  /api/order/:orderId`);
+    console.log(`   POST /api/payment/create-order`);
+    console.log(`   POST /api/payment/verify`);
+    console.log(`   POST /api/orders/save`);
     console.log('\n' + '='.repeat(60) + '\n');
   });
 
