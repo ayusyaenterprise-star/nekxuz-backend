@@ -120,21 +120,44 @@ async function createShipmentInShiprocket(orderData) {
       return null;
     }
 
+    // Parse buyer name into first and last name
+    const nameParts = (orderData.buyerName || 'Customer Unknown').split(' ');
+    const buyerFirstName = nameParts[0] || 'Customer';
+    const buyerLastName = nameParts.slice(1).join(' ') || 'Order';
+
+    // Format order items with required Shiprocket fields
+    const formattedItems = (orderData.items || []).map((item, idx) => ({
+      name: item.name || `Item ${idx + 1}`,
+      units: item.units || item.quantity || 1,
+      selling_price: item.price || 0,
+      sku: item.sku || `SKU-${item.id || idx}`,
+      hsn_code: item.hsn_code || '',
+      manufacturer: item.manufacturer || 'Nekxuz',
+      product_id: item.product_id || item.id || `prod-${idx}`,
+      // Default dimensions if not provided
+      length: item.length || 10,
+      breadth: item.breadth || 10,
+      height: item.height || 10,
+      weight: item.weight || 0.5
+    }));
+
     const payload = {
       order_id: orderData.orderId,
       order_date: new Date().toISOString().split('T')[0],
       pickup_location_id: parseInt(process.env.SHIPROCKET_PICKUP_LOCATION_ID || '1'),
-      billing_customer_name: orderData.buyerName,
+      billing_customer_name: buyerFirstName,
+      billing_last_name: buyerLastName,
       billing_email: orderData.buyerEmail,
       billing_phone: orderData.buyerPhone,
       billing_address: orderData.buyerAddress,
       billing_city: orderData.buyerCity,
       billing_state: orderData.buyerState,
+      billing_country: 'India',
       billing_pincode: orderData.buyerPincode,
       shipping_is_billing: true,
-      order_items: orderData.items || [],
+      order_items: formattedItems,
       payment_method: 'Prepaid',
-      sub_total: orderData.subtotal,
+      sub_total: orderData.subtotal || 0,
       shipping_charges: orderData.shippingCharges || 0,
       cod_amount: 0
     };
