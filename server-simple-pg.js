@@ -133,12 +133,7 @@ async function createShipmentInShiprocket(orderData) {
       sku: item.sku || `SKU-${item.id || idx}`,
       hsn_code: item.hsn_code || '',
       manufacturer: item.manufacturer || 'Nekxuz',
-      product_id: item.product_id || item.id || `prod-${idx}`,
-      // Default dimensions if not provided
-      length: item.length || 10,
-      breadth: item.breadth || 10,
-      height: item.height || 10,
-      weight: item.weight || 0.5
+      product_id: item.product_id || item.id || `prod-${idx}`
     }));
 
     const payload = {
@@ -159,7 +154,12 @@ async function createShipmentInShiprocket(orderData) {
       payment_method: 'Prepaid',
       sub_total: orderData.subtotal || 0,
       shipping_charges: orderData.shippingCharges || 0,
-      cod_amount: 0
+      cod_amount: 0,
+      // Dimensions at top level (required by Shiprocket)
+      length: 10,
+      breadth: 10,
+      height: 10,
+      weight: 0.5
     };
 
     console.log(`   📍 Pickup Location ID: ${process.env.SHIPROCKET_PICKUP_LOCATION_ID || '1'}`);
