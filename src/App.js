@@ -2888,38 +2888,50 @@ const MyOrdersScreen = ({ user }) => {
               </div>
 
               {/* Shipment Tracking */}
-              {trackingData[order.id] || order.shipmentData ? (
-                <div className="bg-green-50 border border-green-100 rounded-lg p-4 mb-4">
-                  <p className="font-semibold text-green-900 text-sm mb-3">📦 Shipment Tracking</p>
-                  <div className="text-sm space-y-1.5 text-green-800">
-                    {trackingData[order.id]?.awb && (
-                      <p><span className="font-semibold">Tracking ID (AWB):</span> <a href={`https://www.shiprocket.in/tracking/${trackingData[order.id].awb}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{trackingData[order.id].awb}</a></p>
-                    )}
-                    {trackingData[order.id]?.shipment_id && (
-                      <p><span className="font-semibold">Shiprocket ID:</span> {trackingData[order.id].shipment_id}</p>
-                    )}
-                    {trackingData[order.id]?.courier && (
-                      <p><span className="font-semibold">Courier:</span> {trackingData[order.id].courier}</p>
-                    )}
-                    {trackingData[order.id]?.status && (
-                      <p><span className="font-semibold">Status:</span> {trackingData[order.id].status}</p>
-                    )}
-                    {!trackingData[order.id]?.awb && (
-                      <p className="text-yellow-700"><span className="font-semibold">⏳ Status:</span> Processing - Awaiting shipment</p>
-                    )}
-                  </div>
-                </div>
-              ) : null}
+              {(() => {
+                // Get tracking data from API or order object
+                const shipment = trackingData[order.id] || (typeof order.shipmentData === 'string' ? JSON.parse(order.shipmentData) : order.shipmentData);
+                
+                // Check if we have valid shipment data
+                if (shipment && (shipment.awb || shipment.shipment_id)) {
+                  return (
+                    <div className="bg-green-50 border border-green-100 rounded-lg p-4 mb-4">
+                      <p className="font-semibold text-green-900 text-sm mb-3">📦 Shipment Tracking</p>
+                      <div className="text-sm space-y-1.5 text-green-800">
+                        {shipment.awb && (
+                          <p><span className="font-semibold">Tracking ID (AWB):</span> <a href={`https://www.shiprocket.in/tracking/${shipment.awb}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-mono">{shipment.awb}</a></p>
+                        )}
+                        {shipment.shipment_id && (
+                          <p><span className="font-semibold">Shiprocket ID:</span> {shipment.shipment_id}</p>
+                        )}
+                        {shipment.courier && (
+                          <p><span className="font-semibold">Courier:</span> {shipment.courier}</p>
+                        )}
+                        {shipment.status && (
+                          <p><span className="font-semibold">Status:</span> <span className="capitalize">{shipment.status}</span></p>
+                        )}
+                        {!shipment.awb && shipment.shipment_id && (
+                          <p className="text-yellow-700"><span className="font-semibold">⏳ Status:</span> Processing - Awaiting AWB assignment</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               <div className="flex gap-2">
                 <button className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-all text-sm">
                   View Details
                 </button>
-                {order.status === 'paid' && order.shipment && (
-                  <button className="flex-1 py-2 px-4 bg-primary text-white font-semibold rounded-lg hover:bg-orange-600 transition-all text-sm">
-                    Track Shipment
-                  </button>
-                )}
+                {order.status === 'paid' && (() => {
+                  const shipment = trackingData[order.id] || (typeof order.shipmentData === 'string' ? JSON.parse(order.shipmentData) : order.shipmentData);
+                  return shipment?.awb ? (
+                    <a href={`https://www.shiprocket.in/tracking/${shipment.awb}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 px-4 bg-primary text-white font-semibold rounded-lg hover:bg-orange-600 transition-all text-sm text-center">
+                      Track Shipment
+                    </a>
+                  ) : null;
+                })()}
               </div>
             </div>
           ))}

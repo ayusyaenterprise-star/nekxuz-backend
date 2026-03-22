@@ -238,6 +238,18 @@ async function initDB() {
     console.log('\n✅ Database Connection: SUCCESS');
     console.log(`   Connected at: ${result.rows[0].now}`);
     
+    // Add shipmentData column if it doesn't exist
+    try {
+      await pool.query(`
+        ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "shipmentData" JSONB;
+      `);
+      console.log('   ✅ shipmentData column ensured');
+    } catch (colErr) {
+      if (!colErr.message.includes('already exists')) {
+        console.warn('   ⚠️ Could not add shipmentData column:', colErr.message);
+      }
+    }
+    
     // Count orders
     const countResult = await pool.query('SELECT COUNT(*) as count FROM "Order"');
     console.log(`   Total Orders in DB: ${countResult.rows[0].count}`);
