@@ -984,15 +984,17 @@ const BottomNav = ({ activeTab, onTabChange }) => {
     { id: 'manufacturing', icon: 'precision_manufacturing', label: 'Mfg' },
     { id: 'wholesaler', icon: 'business', label: 'Wholesaler' },
     { id: 'global', icon: 'public', label: 'Global' },
+    { id: 'messenger', icon: 'mail', label: 'Message' },
+    { id: 'rfq', icon: 'description', label: 'RFQ' },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t border-gray-200 flex justify-between items-end px-1 pb-4 pt-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t border-gray-200 flex justify-between items-end px-1 pb-4 pt-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] overflow-x-auto">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`flex flex-col items-center gap-1 p-1 flex-1 min-w-0 transition-all relative ${activeTab === tab.id ? 'text-secondary' : 'text-gray-400'}`}
+          className={`flex flex-col items-center gap-1 p-1 flex-1 min-w-fit transition-all relative ${activeTab === tab.id ? 'text-secondary' : 'text-gray-400'}`}
         >
           {activeTab === tab.id && (
             <div className="absolute top-0 h-0.5 w-6 rounded-full bg-secondary shadow-[0_0_10px_2px_rgba(242,108,13,0.3)]"></div>
