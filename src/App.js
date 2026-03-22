@@ -2736,28 +2736,74 @@ const CartOverlay = ({ cart, onClose, onRemove, isOpen }) => {
 const MyOrdersScreen = ({ user }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [trackingData, setTrackingData] = useState({});
 
-  const fetchOrders = useCallback(async () => {
-    if (!user || !user.email) {
-      setLoading(false);
-      return;
-    }
-    // Fetch user's orders from backend
+  const fetchTrackingInfo = useCallback(async (orderId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders?email=${encodeURIComponent(user.email)}`, {
+      const response = await fetch(`${API_BASE_URL}/api/order/${orderId}/tracking`, {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'omit'
       });
       if (response.ok) {
         const data = await response.json();
-        setOrders(data.orders || []);
+        setTrackingData(prev => ({
+          ...prev,
+          [orderId]: data.shipment
+        }));
       }
     } catch (err) {
-      console.error("Failed to fetch orders:", err);
+      console.error(`Failed to fetch tracking for order ${orderId}:`, err);
+    }
+  }, []);
+
+  const fetchOrders = useCallback(async () => {
+    console.log("🎯 MyOrdersScreen mounted! User prop:", user);
+    console.log("🔍 fetchOrders called. User:", user);
+    if (!user || !user.email) {
+      console.warn("⚠️ User not ready yet. User:", user);
+      console.warn("⚠️ Expected user object with email property");
+      setLoading(false);
+      return;
+    }
+    // Fetch user's orders from backend
+    try {
+      console.log(`📡 Fetching orders for email: ${user.email}`);
+      const url = `${API_BASE_URL}/api/orders?email=${encodeURIComponent(user.email)}`;
+      console.log(`📍 API URL: ${url}`);
+      console.log(`📍 API_BASE_URL value: ${API_BASE_URL}`);
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'omit'
+      });
+      console.log(`📊 Response status: ${response.status}`);
+      console.log(`📊 Response ok: ${response.ok}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Orders received:`, data);
+        console.log(`✅ Order count: ${data.orders?.length || 0}`);
+        console.log(`✅ Orders array:`, data.orders);
+        setOrders(data.orders || []);
+        
+        // Fetch tracking info for each order
+        if (data.orders && data.orders.length > 0) {
+          data.orders.forEach(order => {
+            if (order.id) {
+              fetchTrackingInfo(order.id);
+            }
+          });
+        }
+      } else {
+        const errorText = await response.text();
+        console.error(`❌ API returned status ${response.status}`, errorText);
+      }
+    } catch (err) {
+      console.error("❌ Failed to fetch orders:", err);
+      console.error("❌ Error message:", err.message);
+      console.error("❌ Error stack:", err.stack);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, fetchTrackingInfo]);
 
   useEffect(() => {
     fetchOrders();
@@ -2842,17 +2888,28 @@ const MyOrdersScreen = ({ user }) => {
               </div>
 
               {/* Shipment Tracking */}
-              {order.shipment && (
+              {trackingData[order.id] || order.shipmentData ? (
                 <div className="bg-green-50 border border-green-100 rounded-lg p-4 mb-4">
                   <p className="font-semibold text-green-900 text-sm mb-3">📦 Shipment Tracking</p>
                   <div className="text-sm space-y-1.5 text-green-800">
-                    <p><span className="font-semibold">Tracking ID (AWB):</span> {order.shipment.awb}</p>
-                    <p><span className="font-semibold">Shiprocket ID:</span> {order.shipment.shipment_id || 'N/A'}</p>
-                    <p><span className="font-semibold">Courier:</span> {order.shipment.courier}</p>
-                    <p><span className="font-semibold">Status:</span> {order.shipment.status || 'Processing'}</p>
+                    {trackingData[order.id]?.awb && (
+                      <p><span className="font-semibold">Tracking ID (AWB):</span> <a href={`https://www.shiprocket.in/tracking/${trackingData[order.id].awb}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{trackingData[order.id].awb}</a></p>
+                    )}
+                    {trackingData[order.id]?.shipment_id && (
+                      <p><span className="font-semibold">Shiprocket ID:</span> {trackingData[order.id].shipment_id}</p>
+                    )}
+                    {trackingData[order.id]?.courier && (
+                      <p><span className="font-semibold">Courier:</span> {trackingData[order.id].courier}</p>
+                    )}
+                    {trackingData[order.id]?.status && (
+                      <p><span className="font-semibold">Status:</span> {trackingData[order.id].status}</p>
+                    )}
+                    {!trackingData[order.id]?.awb && (
+                      <p className="text-yellow-700"><span className="font-semibold">⏳ Status:</span> Processing - Awaiting shipment</p>
+                    )}
                   </div>
                 </div>
-              )}
+              ) : null}
 
               <div className="flex gap-2">
                 <button className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-all text-sm">
@@ -3106,6 +3163,7 @@ const RetailScreen = ({ onAddToCart, onOpenAI, onProductClick, getDiscount, stoc
 };
 
 const AccountScreen = ({ user, onLogout }) => {
+  console.log("🎯 AccountScreen mounted with user:", user);
   return (
     <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

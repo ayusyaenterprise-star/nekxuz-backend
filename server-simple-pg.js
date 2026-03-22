@@ -297,61 +297,20 @@ app.get('/api/orders', async (req, res) => {
       return res.status(503).json({ error: 'Database not connected' });
     }
 
-    const result = await pool.query(`
-      SELECT 
-        o.id,
-        o.invoice,
-        o.amount,
-        o.status,
-        o."buyerName",
-        o."buyerEmail",
-        o."buyerAddress",
-        o."buyerCity",
-        o."buyerState",
-        o."createdAt",
-        o."updatedAt",
-        s.id as shipment_id,
-        s."shiprocketId",
-        s.awb,
-        s.courier,
-        s.status as shipment_status,
-        s."trackingUrl"
-      FROM "Order" o
-      LEFT JOIN "Shipment" s ON o.id = s."orderId"
-      WHERE o."buyerEmail" = $1 
-      ORDER BY o."createdAt" DESC 
-      LIMIT 50
-    `, [email]);
+    const result = await pool.query(
+      `SELECT * FROM "Order" WHERE "buyerEmail" = $1 ORDER BY "createdAt" DESC LIMIT 50`,
+      [email]
+    );
 
     console.log(`   ✅ Found ${result.rows.length} orders`);
 
-    // Transform results to include shipment info
-    const orders = result.rows.map(row => ({
-      id: row.id,
-      invoice: row.invoice,
-      amount: row.amount,
-      status: row.status,
-      buyerName: row.buyer_name,
-      buyerEmail: row.buyer_email,
-      buyerAddress: row.buyer_address,
-      buyerCity: row.buyer_city,
-      buyerState: row.buyer_state,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      shipment: row.shipment_id ? {
-        id: row.shipment_id,
-        shiprocketId: row.shiprocket_id,
-        awb: row.awb,
-        courier: row.courier,
-        status: row.shipment_status,
-        trackingUrl: row.tracking_url
-      } : null
-    }));
+    // Calculate count for response
+    const count = result.rows.length;
 
     res.json({ 
       ok: true,
-      orders: orders,
-      count: orders.length,
+      orders: result.rows,
+      count: count,
       timestamp: new Date().toISOString()
     });
   } catch (err) {
@@ -421,6 +380,47 @@ app.get('/api/order/:orderId', async (req, res) => {
     res.json({ 
       ok: true,
       order: result.rows[0],
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ 
+      error: err.message,
+      ok: false
+    });
+  }
+});
+
+// Get shipment tracking info for an order
+app.get('/api/order/:orderId/tracking', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    console.log(`\n📨 GET /api/order/${orderId}/tracking`);
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not connected' });
+    }
+
+    const result = await pool.query(
+      `SELECT "shipmentData" FROM "Order" WHERE "id" = $1 LIMIT 1`,
+      [orderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        error: 'Order not found',
+        ok: false
+      });
+    }
+
+    const shipmentData = result.rows[0].shipmentData;
+    console.log(`   ✅ Found tracking for order ${orderId}`);
+
+    res.json({ 
+      ok: true,
+      orderId: orderId,
+      shipment: shipmentData,
       timestamp: new Date().toISOString()
     });
   } catch (err) {
@@ -523,16 +523,46 @@ app.post('/api/payment/verify', async (req, res) => {
         const shippingCost = shipping_charges || 0;
         const totalAmount = subtotal + tax + shippingCost;
 
-        // Insert order
+        // Create shipment in Shiprocket FIRST
+        console.log(`   📦 Creating shipment in Shiprocket...`);
+        const shipmentResult = await createShipmentInShiprocket({
+          orderId: razorpay_payment_id,
+          buyerName: billing_customer_name,
+          buyerEmail: billing_email,
+          buyerPhone: billing_phone,
+          buyerAddress: billing_address,
+          buyerCity: billing_city,
+          buyerState: billing_state,
+          buyerPincode: billing_pincode,
+          subtotal: subtotal,
+          shippingCharges: shippingCost,
+          items: invoicePayload.order_items || []
+        });
+
+        // Prepare shipment data for storage
+        const shipmentData = shipmentResult ? {
+          shipment_id: shipmentResult.shipment_id,
+          order_id: shipmentResult.order_id,
+          awb: shipmentResult.packages?.[0]?.awb || null,
+          courier: shipmentResult.packages?.[0]?.courier || null,
+          status: 'processing',
+          created_at: new Date().toISOString()
+        } : null;
+
+        // Insert order with shipment data
         const result = await pool.query(
           `INSERT INTO "Order" (
             id, invoice, amount, currency, status, 
             subtotal, tax, "shippingCharges", 
             "buyerName", "buyerEmail", "buyerPhone", 
             "buyerAddress", "buyerCity", "buyerState", "buyerPincode",
+            "shipmentData",
             "createdAt", "updatedAt"
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
-          ON CONFLICT (id) DO UPDATE SET status = $5, "updatedAt" = NOW()
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+          ON CONFLICT (id) DO UPDATE SET 
+            status = $5, 
+            "shipmentData" = $16,
+            "updatedAt" = NOW()
           RETURNING *`,
           [
             razorpay_payment_id,
@@ -549,62 +579,14 @@ app.post('/api/payment/verify', async (req, res) => {
             billing_address,
             billing_city,
             billing_state,
-            billing_pincode
+            billing_pincode,
+            JSON.stringify(shipmentData)
           ]
         );
 
         console.log(`   💾 Order saved to database: ${razorpay_payment_id}`);
-
-        // Create shipment in Shiprocket
-        console.log(`   📦 Creating shipment in Shiprocket...`);
-        const shipmentResult = await createShipmentInShiprocket({
-          orderId: razorpay_payment_id,
-          buyerName: billing_customer_name,
-          buyerEmail: billing_email,
-          buyerPhone: billing_phone,
-          buyerAddress: billing_address,
-          buyerCity: billing_city,
-          buyerState: billing_state,
-          buyerPincode: billing_pincode,
-          subtotal: subtotal,
-          shippingCharges: shippingCost,
-          items: invoicePayload.order_items || []
-        });
-
-        // Save shipment details to database
-        if (shipmentResult && shipmentResult.shipment_id) {
-          try {
-            const shipmentQuery = `
-              INSERT INTO "Shipment" (
-                id, "orderId", "shiprocketId", awb, courier, status, "trackingUrl", "createdAt", "updatedAt"
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-              ON CONFLICT ("orderId") DO UPDATE SET
-                "shiprocketId" = $3,
-                awb = $4,
-                courier = $5,
-                status = $6,
-                "trackingUrl" = $7,
-                "updatedAt" = NOW()
-            `;
-            
-            const shipmentTrackingUrl = `https://www.shiprocket.co/tracking/${shipmentResult.shipment_id}`;
-            
-            await pool.query(
-              shipmentQuery,
-              [
-                `shipment_${razorpay_payment_id}`,
-                razorpay_payment_id,
-                shipmentResult.shipment_id,
-                shipmentResult.awb || '',
-                shipmentResult.courier || 'Pending',
-                'created',
-                shipmentTrackingUrl
-              ]
-            );
-            console.log(`   ✅ Shipment saved to database with ID: ${shipmentResult.shipment_id}`);
-          } catch (shipErr) {
-            console.warn(`   ⚠️ Failed to save shipment to DB: ${shipErr.message}`);
-          }
+        if (shipmentData) {
+          console.log(`   📦 Shipment data stored: AWB=${shipmentData.awb}, Courier=${shipmentData.courier}`);
         }
 
         return res.json({
@@ -701,71 +683,6 @@ app.post('/api/orders/save', async (req, res) => {
       error: err.message,
       ok: false
     });
-  }
-});
-
-// Get Order with Shipment Tracking Info
-app.get('/api/order/:orderId/tracking', async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    
-    if (!pool) {
-      return res.status(503).json({ error: 'Database not available' });
-    }
-
-    // Get order and shipment details
-    const result = await pool.query(`
-      SELECT 
-        o.id,
-        o.invoice,
-        o.amount,
-        o.status,
-        o."buyerName",
-        o."buyerEmail",
-        o."createdAt",
-        o."updatedAt",
-        s.id as shipment_id,
-        s."shiprocketId",
-        s.awb,
-        s.courier,
-        s.status as shipment_status,
-        s."trackingUrl",
-        s."createdAt" as shipment_created_at
-      FROM "Order" o
-      LEFT JOIN "Shipment" s ON o.id = s."orderId"
-      WHERE o.id = $1
-    `, [orderId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    const order = result.rows[0];
-    res.json({
-      ok: true,
-      order: {
-        id: order.id,
-        invoice: order.invoice,
-        amount: order.amount,
-        status: order.status,
-        buyerName: order.buyer_name,
-        buyerEmail: order.buyer_email,
-        createdAt: order.created_at,
-        updatedAt: order.updated_at
-      },
-      shipment: order.shipment_id ? {
-        id: order.shipment_id,
-        shiprocketId: order.shiprocket_id,
-        awb: order.awb,
-        courier: order.courier,
-        status: order.shipment_status,
-        trackingUrl: order.tracking_url,
-        createdAt: order.shipment_created_at
-      } : null
-    });
-  } catch (err) {
-    console.error(`   ❌ Error: ${err.message}`);
-    res.status(500).json({ error: err.message });
   }
 });
 
