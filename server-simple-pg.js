@@ -40,6 +40,10 @@ console.log(`   Node Version: ${process.version}`);
 console.log(`   PORT: ${PORT}`);
 console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 console.log(`   DATABASE_URL: ${process.env.DATABASE_URL ? '✅ SET' : '❌ NOT SET'}`);
+console.log(`   SHIPROCKET_EMAIL: ${process.env.SHIPROCKET_EMAIL ? '✅ SET' : '❌ NOT SET'}`);
+console.log(`   SHIPROCKET_PASSWORD: ${process.env.SHIPROCKET_PASSWORD ? '✅ SET' : '❌ NOT SET'}`);
+console.log(`   SHIPROCKET_PICKUP_LOCATION_ID: ${process.env.SHIPROCKET_PICKUP_LOCATION_ID ? '✅ SET: ' + process.env.SHIPROCKET_PICKUP_LOCATION_ID : '❌ NOT SET'}`);
+console.log(`   SHIPROCKET_DEBUG: ${process.env.SHIPROCKET_DEBUG ? '✅ SET: ' + process.env.SHIPROCKET_DEBUG : '❌ NOT SET'}`);
 
 if (process.env.DATABASE_URL) {
   // Mask password for logging
@@ -63,7 +67,18 @@ async function getShiprocketToken() {
   try {
     // Check if token is still valid
     if (shiprocketToken && Date.now() < shiprocketTokenExpiry) {
+      console.log('   ✅ Using cached Shiprocket token');
       return shiprocketToken;
+    }
+
+    console.log('   🔐 Fetching new Shiprocket token...');
+    console.log(`   📧 Email: ${process.env.SHIPROCKET_EMAIL ? process.env.SHIPROCKET_EMAIL.substring(0, 10) + '...' : 'NOT SET'}`);
+    console.log(`   🔑 Password: ${process.env.SHIPROCKET_PASSWORD ? 'SET (****)' : 'NOT SET'}`);
+
+    if (!process.env.SHIPROCKET_EMAIL || !process.env.SHIPROCKET_PASSWORD) {
+      console.error('   ❌ Shiprocket credentials not set in environment!');
+      console.error('   ❌ Add SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD to Render settings');
+      return null;
     }
 
     const response = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
@@ -78,16 +93,18 @@ async function getShiprocketToken() {
     const data = await response.json();
     
     if (!data.token) {
-      console.error('   ❌ Shiprocket auth failed:', data.message);
+      console.error('   ❌ Shiprocket auth failed');
+      console.error('   ❌ Response:', JSON.stringify(data, null, 2));
       return null;
     }
 
     shiprocketToken = data.token;
     shiprocketTokenExpiry = Date.now() + (23 * 60 * 60 * 1000); // 23 hours
-    console.log('   ✅ Shiprocket token obtained');
+    console.log('   ✅ Shiprocket token obtained (expires in 23 hours)');
     return shiprocketToken;
   } catch (err) {
     console.error('   ❌ Shiprocket auth error:', err.message);
+    console.error('   ❌ Stack:', err.stack);
     return null;
   }
 }
@@ -95,9 +112,11 @@ async function getShiprocketToken() {
 // Create Shipment in Shiprocket
 async function createShipmentInShiprocket(orderData) {
   try {
+    console.log(`   📦 Creating Shiprocket shipment for order: ${orderData.orderId}`);
+    
     const token = await getShiprocketToken();
     if (!token) {
-      console.error('   ⚠️ Cannot create shipment - no Shiprocket token');
+      console.error('   ⚠️ Cannot create shipment - no Shiprocket token. Check env vars!');
       return null;
     }
 
@@ -120,10 +139,14 @@ async function createShipmentInShiprocket(orderData) {
       cod_amount: 0
     };
 
+    console.log(`   📍 Pickup Location ID: ${process.env.SHIPROCKET_PICKUP_LOCATION_ID || '1'}`);
+    console.log(`   📍 Items to ship: ${payload.order_items.length}`);
+
     if (process.env.SHIPROCKET_DEBUG === 'true') {
-      console.log('   📦 Shiprocket payload:', JSON.stringify(payload, null, 2));
+      console.log('   � Shiprocket payload:', JSON.stringify(payload, null, 2));
     }
 
+    console.log('   🌐 Sending to Shiprocket API...');
     const response = await fetch('https://apiv2.shiprocket.in/v1/external/orders/create/adhoc', {
       method: 'POST',
       headers: {
@@ -134,14 +157,18 @@ async function createShipmentInShiprocket(orderData) {
     });
 
     const result = await response.json();
+    console.log(`   📊 Shiprocket Response Status: ${response.status}`);
 
     if (!response.ok) {
-      console.error('   ❌ Shiprocket error:', result.message || result.error);
+      console.error('   ❌ Shiprocket API Error (HTTP ' + response.status + ')');
+      console.error('   ❌ Error details:', JSON.stringify(result, null, 2));
       return null;
     }
 
-    if (result.success) {
-      console.log(`   ✅ Shipment created in Shiprocket: Order ${orderData.orderId}`);
+    if (result.success || result.shipment_id) {
+      console.log(`   ✅ Shipment created in Shiprocket!`);
+      console.log(`   🎫 Shipment ID: ${result.data?.shipment_id || 'pending'}`);
+      console.log(`   📦 Order ID: ${result.data?.order_id || 'pending'}`);
       return {
         success: true,
         shipment_id: result.data?.shipment_id,
@@ -149,11 +176,15 @@ async function createShipmentInShiprocket(orderData) {
         packages: result.data?.packages || []
       };
     } else {
-      console.error('   ❌ Shiprocket error:', result.message);
+      console.error('   ❌ Shiprocket returned success=false');
+      console.error('   ❌ Message:', result.message);
+      console.error('   ❌ Full response:', JSON.stringify(result, null, 2));
       return null;
     }
   } catch (err) {
-    console.error('   ⚠️ Shiprocket shipment error:', err.message);
+    console.error('   ❌ Shiprocket shipment creation failed!');
+    console.error('   ❌ Error:', err.message);
+    console.error('   ❌ Stack:', err.stack);
     return null;
   }
 }
