@@ -261,7 +261,8 @@ app.post('/api/payment/create-order', async (req, res) => {
     res.json({
       id: order.id,
       currency: order.currency,
-      amount: order.amount
+      amount: order.amount,
+      key_id: process.env.RAZORPAY_KEY_ID  // ✅ ADDED - Send key to frontend
     });
   } catch (err) {
     console.error(`   ❌ Error: ${err.message}`);
