@@ -2048,9 +2048,9 @@ const WholesaleScreen = ({ products, onProductClick, onAddToCart, title, stock =
                   let badgeColor = 'bg-red-500'; // Out of stock
                   let badgeText = 'Out of Stock';
                   if (stockQty > 10) {
-                    badgeColor = 'bg-green-600';
-                    badgeText = `${stockQty} in Stock`;
-                  } else if (stockQty > 0) {
+                    // Hide stock count from users when above 10
+                    return null;
+                  } else if (stockQty > 0 && stockQty <= 10) {
                     badgeColor = 'bg-yellow-600';
                     badgeText = `Only ${stockQty} left`;
                   }
