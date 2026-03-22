@@ -5333,7 +5333,18 @@ const App = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState(ALL_PRODUCTS);
-  const [stock, setStock] = useState({});
+  const [stock, setStock] = useState(() => {
+    // Initialize stock for all products with persistent storage
+    const saved = localStorage.getItem('nekxuzStock');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    const stockObj = {};
+    ALL_PRODUCTS.forEach(p => {
+      stockObj[p.id] = { available: 100, reserved: 0, sold: 0 };
+    });
+    return stockObj;
+  });
   const [isSellerMode, setIsSellerMode] = useState(() => window.location.search.includes('seller=true'));
   const [isAdminMode, setIsAdminMode] = useState(() => window.location.search.includes('admin=true'));
   const [adminUser, setAdminUser] = useState(null);
@@ -5430,7 +5441,10 @@ const App = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          setStock(data.stock || {});
+          const stockData = data.stock || {};
+          setStock(stockData);
+          // Also save to localStorage to sync with admin portal
+          localStorage.setItem('nekxuzStock', JSON.stringify(stockData));
         }
       } catch (err) {
         console.error("Failed to fetch stock:", err);
