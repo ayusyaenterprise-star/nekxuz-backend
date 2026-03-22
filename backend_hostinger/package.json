@@ -1,4 +1,4 @@
-{
+fetch("https://api.nekxuz.in/").then(r => r.json()).then(d => console.log({
   "name": "nekxuz-backend",
   "version": "1.0.0",
   "description": "Nekxuz Backend API Server",

@@ -24,7 +24,8 @@
     "pdfkit": "^0.17.2",
     "pg": "^8.20.0",
     "prisma": "^5.0.0",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "web-vitals": "^5.1.0"
   },
   "scripts": {
     "start": "node server-simple-pg.js",

@@ -698,6 +698,204 @@ app.post('/api/orders/save', async (req, res) => {
   }
 });
 
+// ==================== PRODUCT & STOCK MANAGEMENT APIs ====================
+
+// Get all products with stock and listing info
+app.get('/api/admin/products', async (req, res) => {
+  try {
+    console.log('\n📦 GET /api/admin/products');
+    
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not connected' });
+    }
+
+    // Create tables if they don't exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "Product" (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        price DECIMAL(10,2),
+        moq INTEGER,
+        category TEXT,
+        manufacturer TEXT,
+        gstin TEXT,
+        address TEXT,
+        source TEXT,
+        sku TEXT,
+        data JSONB,
+        "createdAt" TIMESTAMP DEFAULT NOW(),
+        "updatedAt" TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS "ProductStock" (
+        id SERIAL PRIMARY KEY,
+        "productId" TEXT REFERENCES "Product"(id) ON DELETE CASCADE,
+        available INTEGER DEFAULT 0,
+        reserved INTEGER DEFAULT 0,
+        sold INTEGER DEFAULT 0,
+        "updatedAt" TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS "ProductListing" (
+        id SERIAL PRIMARY KEY,
+        "productId" TEXT REFERENCES "Product"(id) ON DELETE CASCADE UNIQUE,
+        page TEXT DEFAULT 'home',
+        section TEXT DEFAULT 'trending',
+        position INTEGER DEFAULT 0,
+        enabled BOOLEAN DEFAULT true,
+        "createdAt" TIMESTAMP DEFAULT NOW(),
+        "updatedAt" TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    const result = await pool.query(`
+      SELECT 
+        p.id,
+        p.title,
+        p.price,
+        p.moq,
+        p.category,
+        p.manufacturer,
+        p.gstin,
+        p.address,
+        p.source,
+        p.sku,
+        COALESCE(ps.available, 0) as available,
+        COALESCE(ps.reserved, 0) as reserved,
+        COALESCE(ps.sold, 0) as sold,
+        COALESCE(pl.page, 'home') as page,
+        COALESCE(pl.section, 'trending') as section,
+        COALESCE(pl.position, 0) as position,
+        COALESCE(pl.enabled, true) as enabled
+      FROM "Product" p
+      LEFT JOIN "ProductStock" ps ON p.id = ps."productId"
+      LEFT JOIN "ProductListing" pl ON p.id = pl."productId"
+      ORDER BY pl.position ASC
+    `);
+
+    console.log(`   ✅ Found ${result.rows.length} products`);
+    res.json({ ok: true, products: result.rows });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ error: err.message, ok: false });
+  }
+});
+
+// Update product stock
+app.post('/api/admin/stock/update', async (req, res) => {
+  try {
+    console.log('\n📦 POST /api/admin/stock/update');
+    const { productId, available, reserved, sold } = req.body;
+
+    if (!pool || !productId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Update or insert stock
+    const result = await pool.query(`
+      INSERT INTO "ProductStock" ("productId", available, reserved, sold, "updatedAt")
+      VALUES ($1, $2, $3, $4, NOW())
+      ON CONFLICT ("productId") DO UPDATE SET
+        available = $2,
+        reserved = $3,
+        sold = $4,
+        "updatedAt" = NOW()
+      RETURNING *
+    `, [productId, available || 0, reserved || 0, sold || 0]);
+
+    console.log(`   ✅ Stock updated for ${productId}: ${available} available`);
+    res.json({ ok: true, stock: result.rows[0] });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ error: err.message, ok: false });
+  }
+});
+
+// Update product listing (page/section/position)
+app.post('/api/admin/listing/update', async (req, res) => {
+  try {
+    console.log('\n📋 POST /api/admin/listing/update');
+    const { productId, page, section, position, enabled } = req.body;
+
+    if (!pool || !productId) {
+      return res.status(400).json({ error: 'Missing productId' });
+    }
+
+    const result = await pool.query(`
+      INSERT INTO "ProductListing" ("productId", page, section, position, enabled, "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      ON CONFLICT ("productId") DO UPDATE SET
+        page = $2,
+        section = $3,
+        position = $4,
+        enabled = $5,
+        "updatedAt" = NOW()
+      RETURNING *
+    `, [productId, page || 'home', section || 'trending', position || 0, enabled !== false]);
+
+    console.log(`   ✅ Listing updated for ${productId}: ${page}/${section}`);
+    res.json({ ok: true, listing: result.rows[0] });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ error: err.message, ok: false });
+  }
+});
+
+// Add or update product
+app.post('/api/admin/product/save', async (req, res) => {
+  try {
+    console.log('\n📝 POST /api/admin/product/save');
+    const { id, title, price, moq, category, manufacturer, gstin, address, source, sku, data } = req.body;
+
+    if (!pool || !id || !title) {
+      return res.status(400).json({ error: 'Missing required fields: id, title' });
+    }
+
+    const result = await pool.query(`
+      INSERT INTO "Product" (id, title, price, moq, category, manufacturer, gstin, address, source, sku, data)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ON CONFLICT (id) DO UPDATE SET
+        title = $2,
+        price = $3,
+        moq = $4,
+        category = $5,
+        manufacturer = $6,
+        gstin = $7,
+        address = $8,
+        source = $9,
+        sku = $10,
+        data = $11,
+        "updatedAt" = NOW()
+      RETURNING *
+    `, [id, title, price || 0, moq || 1, category, manufacturer, gstin, address, source, sku, JSON.stringify(data || {})]);
+
+    console.log(`   ✅ Product saved: ${id}`);
+    res.json({ ok: true, product: result.rows[0] });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ error: err.message, ok: false });
+  }
+});
+
+// Delete product
+app.delete('/api/admin/product/:id', async (req, res) => {
+  try {
+    console.log(`\n🗑️  DELETE /api/admin/product/${req.params.id}`);
+    const { id } = req.params;
+
+    if (!pool) {
+      return res.status(503).json({ error: 'Database not connected' });
+    }
+
+    await pool.query(`DELETE FROM "Product" WHERE id = $1`, [id]);
+    console.log(`   ✅ Product deleted: ${id}`);
+    res.json({ ok: true, message: 'Product deleted' });
+  } catch (err) {
+    console.error(`   ❌ Error: ${err.message}`);
+    res.status(500).json({ error: err.message, ok: false });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({

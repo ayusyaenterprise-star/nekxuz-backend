@@ -275,6 +275,58 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
+// TEST ENDPOINT - Create order without payment verification
+// ONLY FOR TESTING - Remove in production
+app.post('/api/test-order', (req, res) => {
+  try {
+    const {
+      orderId,
+      email,
+      amount,
+      cartItems,
+      shippingAddress
+    } = req.body;
+
+    // Validate required fields
+    if (!orderId || !email || !amount) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Missing required fields: orderId, email, amount'
+      });
+    }
+
+    // Create order data
+    const orderData = {
+      orderId,
+      email,
+      amount,
+      status: 'completed_test',
+      cartItems: cartItems || [],
+      shippingAddress: shippingAddress || {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      testOrder: true,
+      note: 'This is a test order - not a real payment'
+    };
+
+    // Save to file
+    saveOrderToFile(orderId, orderData);
+
+    res.json({
+      ok: true,
+      message: 'Test order created successfully',
+      orderId,
+      status: 'completed_test'
+    });
+  } catch (error) {
+    console.error('Test order creation error:', error);
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);

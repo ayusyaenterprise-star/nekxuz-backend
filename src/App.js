@@ -4275,8 +4275,13 @@ const AdminDashboard = ({ adminUser, onLogout }) => {
   const [adminTab, setAdminTab] = useState('orders');
   const [products, setProducts] = useState(ALL_PRODUCTS);
   const [orders, setOrders] = useState([]);
+  const [productListings, setProductListings] = useState({});
   const [stock, setStock] = useState(() => {
-    // Initialize stock for all products
+    // Initialize stock for all products with persistent storage
+    const saved = localStorage.getItem('nekxuzStock');
+    if (saved) {
+      return JSON.parse(saved);
+    }
     const stockObj = {};
     ALL_PRODUCTS.forEach(p => {
       stockObj[p.id] = { available: 100, reserved: 0, sold: 0 };
@@ -4478,17 +4483,21 @@ const AdminDashboard = ({ adminUser, onLogout }) => {
     const quantity = Math.max(0, newQuantity);
     
     // Update local state immediately for UI responsiveness
-    setStock({
+    const updatedStock = {
       ...stock,
       [productId]: {
         ...stock[productId],
         available: quantity
       }
-    });
+    };
+    setStock(updatedStock);
+    
+    // Save to localStorage (persistent)
+    localStorage.setItem('nekxuzStock', JSON.stringify(updatedStock));
 
     // Sync with backend
     try {
-      await fetch(`${API_BASE_URL}/api/stock/update`, {
+      await fetch(`${API_BASE_URL}/api/admin/stock/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -5140,31 +5149,170 @@ const AdminDashboard = ({ adminUser, onLogout }) => {
           {/* Site Positioning Tab */}
           {adminTab === 'positioning' && (
             <div>
-              <h2 className="text-3xl font-bold mb-6 text-gray-900">Site Positioning & Display</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="font-bold text-lg mb-4 text-gray-900">Top Products (Home Page)</h3>
-                  <p className="text-sm text-gray-600 mb-4">Current products shown in "Top Selling" section:</p>
-                  <div className="space-y-2">
-                    {products.filter(p => ['blueva1', 'blueva2', 'blueva3', 'allTreeCombo'].includes(p.id)).map(p => (
-                      <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="font-semibold text-gray-900">{p.title}</span>
-                        <span className="text-xs bg-primary text-white px-2 py-1 rounded">Featured</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <h2 className="text-3xl font-bold mb-6 text-gray-900">📍 Product Listing Management</h2>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-900">
+                  <strong>Control where each product appears:</strong> Choose which page and section each product displays, and set the display order.
+                </p>
+              </div>
 
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="font-bold text-lg mb-4 text-gray-900">Trending Products</h3>
-                  <p className="text-sm text-gray-600 mb-4">Current products in "Trending" section:</p>
-                  <div className="space-y-2">
-                    {products.filter(p => ['blueva1', 'blueva2', 'blueva3'].includes(p.id)).map(p => (
-                      <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="font-semibold text-gray-900">{p.title}</span>
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Trending</span>
+              <div className="space-y-4">
+                {products.map(p => (
+                  <div key={p.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all">
+                    <div className="flex items-start gap-4 mb-4">
+                      <img src={p.img} alt={p.title} className="w-16 h-16 rounded object-cover bg-gray-100" />
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900">{p.title}</h3>
+                        <p className="text-sm text-gray-500 mt-1">ID: {p.id}</p>
                       </div>
-                    ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      {/* Page Selection */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-2">📄 Show on Page:</label>
+                        <select 
+                          defaultValue="home"
+                          onChange={(e) => {
+                            setProductListings({
+                              ...productListings,
+                              [p.id]: { ...productListings[p.id], page: e.target.value }
+                            });
+                            localStorage.setItem(`listing_${p.id}`, JSON.stringify({
+                              ...productListings[p.id],
+                              page: e.target.value
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold"
+                        >
+                          <option value="home">Home Page</option>
+                          <option value="wholesale">Wholesale</option>
+                          <option value="retail">Retail</option>
+                          <option value="direct">Direct from Mfg</option>
+                          <option value="contract">Contract Mfg</option>
+                        </select>
+                      </div>
+
+                      {/* Section Selection */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-2">🎯 Section:</label>
+                        <select 
+                          defaultValue="trending"
+                          onChange={(e) => {
+                            setProductListings({
+                              ...productListings,
+                              [p.id]: { ...productListings[p.id], section: e.target.value }
+                            });
+                            localStorage.setItem(`listing_${p.id}`, JSON.stringify({
+                              ...productListings[p.id],
+                              section: e.target.value
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold"
+                        >
+                          <option value="featured">⭐ Featured</option>
+                          <option value="trending">🔥 Trending</option>
+                          <option value="bestselling">📈 Best Selling</option>
+                          <option value="new">✨ New Arrivals</option>
+                          <option value="flashsale">⚡ Flash Sale</option>
+                          <option value="hidden">👁️ Hidden</option>
+                        </select>
+                      </div>
+
+                      {/* Display Order */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-2">🔢 Display Order:</label>
+                        <input 
+                          type="number" 
+                          min="0" 
+                          max="99"
+                          defaultValue="0"
+                          onChange={(e) => {
+                            setProductListings({
+                              ...productListings,
+                              [p.id]: { ...productListings[p.id], position: parseInt(e.target.value) || 0 }
+                            });
+                            localStorage.setItem(`listing_${p.id}`, JSON.stringify({
+                              ...productListings[p.id],
+                              position: parseInt(e.target.value) || 0
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold text-center"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Lower number = higher priority</p>
+                      </div>
+
+                      {/* Visibility Toggle */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-2">👁️ Visibility:</label>
+                        <label className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                          <input 
+                            type="checkbox" 
+                            defaultChecked={true}
+                            onChange={(e) => {
+                              setProductListings({
+                                ...productListings,
+                                [p.id]: { ...productListings[p.id], enabled: e.target.checked }
+                              });
+                              localStorage.setItem(`listing_${p.id}`, JSON.stringify({
+                                ...productListings[p.id],
+                                enabled: e.target.checked
+                              }));
+                            }}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm font-semibold text-gray-900">Show on Site</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <div className="mt-4">
+                      <button
+                        onClick={async () => {
+                          const listing = productListings[p.id] || { page: 'home', section: 'trending', position: 0, enabled: true };
+                          try {
+                            await fetch(`${API_BASE_URL}/api/admin/listing/update`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ productId: p.id, ...listing }),
+                              credentials: 'omit'
+                            });
+                            alert(`✅ Listing saved for ${p.title}`);
+                          } catch (err) {
+                            console.error('Failed to save listing:', err);
+                            alert('Listing saved locally (offline mode)');
+                          }
+                        }}
+                        className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-orange-600 transition-colors"
+                      >
+                        💾 Save Listing
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Positioning Legend */}
+              <div className="bg-gray-50 rounded-lg p-6 mt-8 border border-gray-200">
+                <h3 className="font-bold text-lg text-gray-900 mb-4">📚 Where Products Appear</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white rounded p-4 border-l-4 border-orange-500">
+                    <p className="font-bold text-gray-900">⭐ Featured Section</p>
+                    <p className="text-xs text-gray-600 mt-1">Top priority products, appear first on all pages</p>
+                  </div>
+                  <div className="bg-white rounded p-4 border-l-4 border-red-500">
+                    <p className="font-bold text-gray-900">🔥 Trending Section</p>
+                    <p className="text-xs text-gray-600 mt-1">Currently popular products highlighted</p>
+                  </div>
+                  <div className="bg-white rounded p-4 border-l-4 border-green-500">
+                    <p className="font-bold text-gray-900">📈 Best Selling</p>
+                    <p className="text-xs text-gray-600 mt-1">Products with highest sales volume</p>
+                  </div>
+                  <div className="bg-white rounded p-4 border-l-4 border-blue-500">
+                    <p className="font-bold text-gray-900">⚡ Flash Sale</p>
+                    <p className="text-xs text-gray-600 mt-1">Time-limited special offers</p>
                   </div>
                 </div>
               </div>

@@ -12,24 +12,17 @@ const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { Client } = require('pg');  // Direct PostgreSQL client
+const { PrismaClient } = require('@prisma/client');
 const shiprocket = require('./shiprocket');
 
-// Helper function to get orders directly from PostgreSQL
-async function queryDatabase(query, params) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_ihaG8sPfUnX9@ep-dry-lab-aigsw75j-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
-    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : true
-  });
-  
-  try {
-    await client.connect();
-    const result = await client.query(query, params);
-    return result.rows;
-  } finally {
-    await client.end();
+// Initialize Prisma with connection pool optimization
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
   }
-}
+});
 
 // --- HSN & GST CONFIGURATION ---
 const HSN_RATES = {
@@ -342,26 +335,48 @@ app.get('/api/orders', async (req, res) => {
     // DEBUG: Log the incoming request
     console.log(`[/api/orders] Received email: "${email}"`);
 
-    const query = `
-      SELECT 
-        id, amount, currency, status, "createdAt", 
-        subtotal, tax, "shippingCharges",
-        "buyerName", "buyerEmail", "buyerPhone", 
-        "buyerAddress", "buyerCity", "buyerState", "buyerPincode"
-      FROM "Order"
-      WHERE "buyerEmail" = $1
-      ORDER BY "createdAt" DESC
-      LIMIT 50
-    `;
+    // Query orders by customer email
+    const orders = await prisma.order.findMany({
+      where: {
+        buyerEmail: email  // Filter by buyer email
+      },
+      include: {
+        payments: true,
+        shipment: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
     
-    const orders = await queryDatabase(query, [email]);
-    
-    console.log(`[/api/orders] Found ${orders.length} orders for "${email}"`);
+    // DEBUG: Log query results
+    console.log(`[/api/orders] Database returned ${orders.length} orders for "${email}"`);
 
+    // Return filtered orders
     res.json({ 
       ok: true,
-      count: orders.length,
-      orders: orders
+      orders: orders.map(o => ({
+        id: o.id,
+        amount: o.amount,
+        currency: o.currency,
+        status: o.status,
+        createdAt: o.createdAt,
+        subtotal: o.subtotal,
+        tax: o.tax,
+        shippingCharges: o.shippingCharges,
+        buyerName: o.buyerName,
+        buyerEmail: o.buyerEmail,
+        buyerPhone: o.buyerPhone,
+        buyerAddress: o.buyerAddress,
+        buyerCity: o.buyerCity,
+        buyerState: o.buyerState,
+        buyerPincode: o.buyerPincode,
+        shipment: o.shipment ? {
+          shipment_id: o.shipment.shiprocketId,
+          awb: o.shipment.awb,
+          courier: o.shipment.courier,
+          status: o.shipment.status
+        } : null
+      }))
     });
   } catch (err) {
     console.error("Get Orders Error:", err);
