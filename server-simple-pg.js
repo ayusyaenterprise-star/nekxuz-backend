@@ -54,6 +54,110 @@ app.use(express.json({ limit: '50mb' }));
 // PostgreSQL Pool (better than single connection)
 let pool;
 
+// Shiprocket Token Cache
+let shiprocketToken = null;
+let shiprocketTokenExpiry = 0;
+
+// Get Shiprocket Auth Token
+async function getShiprocketToken() {
+  try {
+    // Check if token is still valid
+    if (shiprocketToken && Date.now() < shiprocketTokenExpiry) {
+      return shiprocketToken;
+    }
+
+    const response = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: process.env.SHIPROCKET_EMAIL,
+        password: process.env.SHIPROCKET_PASSWORD
+      })
+    });
+
+    const data = await response.json();
+    
+    if (!data.token) {
+      console.error('   ❌ Shiprocket auth failed:', data.message);
+      return null;
+    }
+
+    shiprocketToken = data.token;
+    shiprocketTokenExpiry = Date.now() + (23 * 60 * 60 * 1000); // 23 hours
+    console.log('   ✅ Shiprocket token obtained');
+    return shiprocketToken;
+  } catch (err) {
+    console.error('   ❌ Shiprocket auth error:', err.message);
+    return null;
+  }
+}
+
+// Create Shipment in Shiprocket
+async function createShipmentInShiprocket(orderData) {
+  try {
+    const token = await getShiprocketToken();
+    if (!token) {
+      console.error('   ⚠️ Cannot create shipment - no Shiprocket token');
+      return null;
+    }
+
+    const payload = {
+      order_id: orderData.orderId,
+      order_date: new Date().toISOString().split('T')[0],
+      pickup_location_id: parseInt(process.env.SHIPROCKET_PICKUP_LOCATION_ID || '1'),
+      billing_customer_name: orderData.buyerName,
+      billing_email: orderData.buyerEmail,
+      billing_phone: orderData.buyerPhone,
+      billing_address: orderData.buyerAddress,
+      billing_city: orderData.buyerCity,
+      billing_state: orderData.buyerState,
+      billing_pincode: orderData.buyerPincode,
+      shipping_is_billing: true,
+      order_items: orderData.items || [],
+      payment_method: 'Prepaid',
+      sub_total: orderData.subtotal,
+      shipping_charges: orderData.shippingCharges || 0,
+      cod_amount: 0
+    };
+
+    if (process.env.SHIPROCKET_DEBUG === 'true') {
+      console.log('   📦 Shiprocket payload:', JSON.stringify(payload, null, 2));
+    }
+
+    const response = await fetch('https://apiv2.shiprocket.in/v1/external/orders/create/adhoc', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('   ❌ Shiprocket error:', result.message || result.error);
+      return null;
+    }
+
+    if (result.success) {
+      console.log(`   ✅ Shipment created in Shiprocket: Order ${orderData.orderId}`);
+      return {
+        success: true,
+        shipment_id: result.data?.shipment_id,
+        order_id: result.data?.order_id,
+        packages: result.data?.packages || []
+      };
+    } else {
+      console.error('   ❌ Shiprocket error:', result.message);
+      return null;
+    }
+  } catch (err) {
+    console.error('   ⚠️ Shiprocket shipment error:', err.message);
+    return null;
+  }
+}
+
 async function initDB() {
   if (!process.env.DATABASE_URL) {
     console.error('❌ ERROR: DATABASE_URL environment variable not set!');
@@ -356,11 +460,28 @@ app.post('/api/payment/verify', async (req, res) => {
 
         console.log(`   💾 Order saved to database: ${razorpay_payment_id}`);
 
+        // Create shipment in Shiprocket
+        console.log(`   📦 Creating shipment in Shiprocket...`);
+        const shipmentResult = await createShipmentInShiprocket({
+          orderId: razorpay_payment_id,
+          buyerName: billing_customer_name,
+          buyerEmail: billing_email,
+          buyerPhone: billing_phone,
+          buyerAddress: billing_address,
+          buyerCity: billing_city,
+          buyerState: billing_state,
+          buyerPincode: billing_pincode,
+          subtotal: subtotal,
+          shippingCharges: shippingCost,
+          items: invoicePayload.order_items || []
+        });
+
         return res.json({
           ok: true,
           message: 'Payment verified and order saved',
           orderId: razorpay_payment_id,
-          invoice: `invoice_${razorpay_payment_id}`
+          invoice: `invoice_${razorpay_payment_id}`,
+          shipment: shipmentResult || { success: false, message: 'Shipment creation pending' }
         });
       } catch (dbErr) {
         console.error('   ⚠️ Database save error:', dbErr.message);
