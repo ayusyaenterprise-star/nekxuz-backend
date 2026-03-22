@@ -3552,66 +3552,64 @@ const ManufacturingScreen = () => {
   const currentMfg = manufacturers.find(m => m.id === selectedMfg);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Contract Manufacturing</h1>
-        <p className="text-gray-600">Connect with our verified manufacturers for custom production</p>
+    <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8 min-h-screen pb-20">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">Contract Manufacturing</h1>
+        <p className="text-xs sm:text-base text-gray-600">Connect with our verified manufacturers for custom production</p>
       </div>
-
-      {/* Manufacturer Toggle - Removed, only showing Real Herbal Cosmetics */}
 
       {/* Manufacturer Details */}
       {currentMfg && (
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-6 text-white">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl font-bold mb-1">{currentMfg.name}</h2>
-                <p className="opacity-90">{currentMfg.specialization}</p>
-                <p className="text-sm mt-2 opacity-75 font-semibold">{currentMfg.type}</p>
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-4 sm:px-6 py-4 sm:py-6 text-white">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <h2 className="text-xl sm:text-2xl font-bold mb-0.5 sm:mb-1">{currentMfg.name}</h2>
+                <p className="text-xs sm:text-base opacity-90">{currentMfg.specialization}</p>
+                <p className="text-xs sm:text-sm mt-1 sm:mt-2 opacity-75 font-semibold">{currentMfg.type}</p>
               </div>
             </div>
           </div>
 
           {/* Body */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Description */}
-            <p className="text-gray-700">{currentMfg.description}</p>
+            <p className="text-xs sm:text-base text-gray-700">{currentMfg.description}</p>
 
             {/* Key Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">GSTIN</h3>
-                <p className="text-lg text-gray-900 font-semibold">{currentMfg.gstin}</p>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">GSTIN</h3>
+                <p className="text-sm sm:text-lg text-gray-900 font-semibold">{currentMfg.gstin}</p>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">MOQ (Minimum Order)</h3>
-                <p className="text-lg text-gray-900 font-semibold">{currentMfg.minOrder.toLocaleString()} units</p>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">MOQ</h3>
+                <p className="text-sm sm:text-lg text-gray-900 font-semibold">{currentMfg.minOrder.toLocaleString()}</p>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Lead Time</h3>
-                <p className="text-lg text-gray-900 font-semibold">{currentMfg.leadTime}</p>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">Lead Time</h3>
+                <p className="text-sm sm:text-lg text-gray-900 font-semibold">{currentMfg.leadTime}</p>
               </div>
             </div>
 
             {/* Address */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">📍 Address</h3>
-              <p className="text-gray-900">{currentMfg.address}</p>
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+              <h3 className="text-xs font-semibold text-gray-600 uppercase mb-1 sm:mb-2">📍 Address</h3>
+              <p className="text-xs sm:text-base text-gray-900">{currentMfg.address}</p>
             </div>
 
             {/* Contact Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">📞 Phone</h3>
-                <a href={`tel:+91${currentMfg.phone.replace(/[^0-9]/g, '')}`} className="text-blue-600 hover:text-blue-800 font-semibold text-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
+                <h3 className="text-xs font-semibold text-gray-600 uppercase mb-1 sm:mb-2">📞 Phone</h3>
+                <a href={`tel:+91${currentMfg.phone.replace(/[^0-9]/g, '')}`} className="text-xs sm:text-lg text-blue-600 hover:text-blue-800 font-semibold break-all">
                   {currentMfg.phone}
                 </a>
               </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">✉️ Email</h3>
-                <a href={`mailto:${currentMfg.email}`} className="text-green-600 hover:text-green-800 font-semibold break-all">
+              <div className="bg-green-50 rounded-lg p-3 sm:p-4">
+                <h3 className="text-xs font-semibold text-gray-600 uppercase mb-1 sm:mb-2">✉️ Email</h3>
+                <a href={`mailto:${currentMfg.email}`} className="text-xs sm:text-base text-green-600 hover:text-green-800 font-semibold break-all">
                   {currentMfg.email}
                 </a>
               </div>
@@ -3619,10 +3617,10 @@ const ManufacturingScreen = () => {
 
             {/* Certifications */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-3">✅ Certifications</h3>
+              <h3 className="text-xs font-semibold text-gray-600 uppercase mb-2 sm:mb-3">✅ Certifications</h3>
               <div className="flex flex-wrap gap-2">
                 {currentMfg.certifications.map((cert, idx) => (
-                  <span key={idx} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                  <span key={idx} className="bg-green-100 text-green-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">
                     {cert}
                   </span>
                 ))}
@@ -3631,35 +3629,40 @@ const ManufacturingScreen = () => {
 
             {/* Catalogs */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-3">📦 Catalogs Available</h3>
-              <div className="bg-indigo-50 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {currentMfg.catalogs.map((catalog, idx) => (
-                    <div key={idx} className="flex items-start gap-3 bg-white p-3 rounded border border-indigo-200">
-                      <span className="text-indigo-600 font-bold mt-1">•</span>
-                      <div className="flex-1">
-                        <p className="text-gray-900 font-medium text-sm">{catalog.name}</p>
-                        <p className="text-xs text-gray-600 mt-1">MOQ: <span className="font-bold text-indigo-600">{catalog.moq.toLocaleString()} units</span></p>
+              <h3 className="text-xs font-semibold text-gray-600 uppercase mb-2 sm:mb-3">📦 Available Products</h3>
+              <div className="bg-indigo-50 rounded-lg p-3 sm:p-4">
+                <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                  {currentMfg.catalogs.slice(0, 6).map((catalog, idx) => (
+                    <div key={idx} className="flex items-start gap-2 sm:gap-3 bg-white p-2 sm:p-3 rounded border border-indigo-200">
+                      <span className="text-indigo-600 font-bold mt-0.5 sm:mt-1 flex-shrink-0">•</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-gray-900 font-medium line-clamp-2">{catalog.name}</p>
+                        <p className="text-xs text-gray-600 mt-0.5 sm:mt-1">MOQ: <span className="font-bold text-indigo-600">{catalog.moq.toLocaleString()}</span></p>
                       </div>
                     </div>
                   ))}
+                  {currentMfg.catalogs.length > 6 && (
+                    <div className="text-xs text-gray-600 px-3 py-2 text-center">
+                      + {currentMfg.catalogs.length - 6} more products available
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* CTA Buttons - Email Support Only */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4">
+            {/* CTA Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-2 sm:pt-4">
               <a 
-                href={`mailto:ayusyaenterprise@gmail.com?subject=Inquiry - ${encodeURIComponent(currentMfg.name)} - Custom Manufacturing&body=Dear Team,\n\nI am interested in custom manufacturing with ${currentMfg.name}.\n\nPlease contact me with details about your services, pricing, and timeline.\n\nMinimum Order Quantity: ${currentMfg.minOrder} units\nLead Time: ${currentMfg.leadTime}\n\nI look forward to hearing from you.\n\nThank you!`}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                href={`mailto:ayusyaenterprise@gmail.com?subject=Inquiry - ${encodeURIComponent(currentMfg.name)} - Custom Manufacturing&body=Dear Team,\n\nI am interested in custom manufacturing with ${currentMfg.name}.\n\nPlease contact me with details about your services, pricing, and timeline.\n\nMOQ: ${currentMfg.minOrder} units\nLead Time: ${currentMfg.leadTime}\n\nThank you!`}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                � Send Inquiry via Email
+                Send Inquiry
               </a>
               <a 
-                href={`mailto:${currentMfg.email}?subject=Custom Manufacturing Request - ${currentMfg.name}&body=Dear ${currentMfg.name},\n\nI am interested in custom manufacturing services with your organization.\n\nCompany: [Your Company Name]\nContact: [Your Name]\nEmail: [Your Email]\n\nMOQ Required: ${currentMfg.minOrder} units\nLead Time Expected: ${currentMfg.leadTime}\n\nPlease provide quotation and further details.\n\nThank you!`}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                href={`mailto:${currentMfg.email}?subject=Custom Manufacturing - ${currentMfg.name}&body=Dear Team,\n\nI am interested in custom manufacturing services.\n\nMOQ: ${currentMfg.minOrder} units\nLead Time: ${currentMfg.leadTime}\n\nPlease provide quotation and details.\n\nThank you!`}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                � Contact Manufacturer
+                Contact
               </a>
             </div>
           </div>
@@ -3667,11 +3670,11 @@ const ManufacturingScreen = () => {
       )}
 
       {/* Info Box */}
-      <div className="mt-8 bg-amber-50 border border-amber-200 rounded-lg p-6">
-        <h3 className="font-semibold text-amber-900 mb-2">💡 About Contract Manufacturing</h3>
-        <p className="text-amber-800 text-sm">
-          Our team will contact you through <span className="font-bold">ayusyaenterprise@gmail.com</span> to discuss your manufacturing requirements, pricing, and timelines. 
-          All manufacturers are GSTIN verified and GMP certified. Minimum order quantities and lead times are listed above.
+      <div className="mt-6 sm:mt-8 bg-amber-50 border border-amber-200 rounded-lg p-4 sm:p-6">
+        <h3 className="font-semibold text-amber-900 mb-1 sm:mb-2 text-sm sm:text-base">💡 About Contract Manufacturing</h3>
+        <p className="text-amber-800 text-xs sm:text-sm leading-relaxed">
+          Our team will contact you through <span className="font-bold">ayusyaenterprise@gmail.com</span> to discuss your manufacturing requirements. 
+          All manufacturers are GSTIN verified and GMP certified.
         </p>
       </div>
     </main>
@@ -3679,11 +3682,11 @@ const ManufacturingScreen = () => {
 };
 
 const GlobalMarketScreen = () => (
-  <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8">
-    <div className="text-center py-20">
-      <span className="material-symbols-outlined text-6xl text-gray-300 block mb-4">public</span>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Global Market Coming Soon</h2>
-      <p className="text-gray-500">This section is under development</p>
+  <main className="max-w-7xl mx-auto px-3 sm:px-4 py-12 sm:py-20 lg:px-8 min-h-screen flex items-center justify-center">
+    <div className="text-center py-10 sm:py-20 w-full">
+      <span className="material-symbols-outlined text-5xl sm:text-6xl text-gray-300 block mb-3 sm:mb-4">public</span>
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Global Market Coming Soon</h2>
+      <p className="text-xs sm:text-base text-gray-500">This section is under development</p>
     </div>
   </main>
 );
@@ -3712,65 +3715,65 @@ const WholesalerScreen = () => {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Wholesale Partners</h1>
-        <p className="text-gray-600">Premium wholesalers with verified products and competitive pricing</p>
+    <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8 min-h-screen pb-20">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">Wholesale Partners</h1>
+        <p className="text-xs sm:text-base text-gray-600">Premium wholesalers with verified products and competitive pricing</p>
       </div>
 
       {/* Wholesaler Details */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-6 text-white">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">{devayush.name}</h2>
-              <p className="opacity-90">{devayush.specialization}</p>
-              <p className="text-sm mt-2 opacity-75 font-semibold">{devayush.type}</p>
+        <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 sm:px-6 py-4 sm:py-6 text-white">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold mb-0.5 sm:mb-1">{devayush.name}</h2>
+              <p className="text-xs sm:text-base opacity-90">{devayush.specialization}</p>
+              <p className="text-xs sm:text-sm mt-1 sm:mt-2 opacity-75 font-semibold">{devayush.type}</p>
             </div>
           </div>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Description */}
-          <p className="text-gray-700">{devayush.description}</p>
+          <p className="text-xs sm:text-base text-gray-700">{devayush.description}</p>
 
           {/* Key Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">GSTIN</h3>
-              <p className="text-lg text-gray-900 font-semibold">{devayush.gstin}</p>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">GSTIN</h3>
+              <p className="text-sm sm:text-lg text-gray-900 font-semibold">{devayush.gstin}</p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">MOQ (Minimum Order)</h3>
-              <p className="text-lg text-gray-900 font-semibold">{devayush.minOrder.toLocaleString()} units</p>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">MOQ</h3>
+              <p className="text-sm sm:text-lg text-gray-900 font-semibold">{devayush.minOrder.toLocaleString()} units</p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Lead Time</h3>
-              <p className="text-lg text-gray-900 font-semibold">{devayush.leadTime}</p>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">Lead Time</h3>
+              <p className="text-sm sm:text-lg text-gray-900 font-semibold">{devayush.leadTime}</p>
             </div>
           </div>
 
           {/* Address */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">📍 Address</h3>
-            <p className="text-gray-900">{devayush.address}</p>
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+            <h3 className="text-xs font-semibold text-gray-600 uppercase mb-1 sm:mb-2">📍 Address</h3>
+            <p className="text-xs sm:text-base text-gray-900">{devayush.address}</p>
           </div>
 
           {/* Contact Information */}
-          <div className={`grid ${devayush.phone ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
+          <div className={`grid ${devayush.phone ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-3 sm:gap-4`}>
             {devayush.phone && (
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">📞 Phone</h3>
-                <a href={`tel:+91${devayush.phone.replace(/[^0-9]/g, '')}`} className="text-blue-600 hover:text-blue-800 font-semibold text-lg">
+              <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
+                <h3 className="text-xs font-semibold text-gray-600 uppercase mb-1 sm:mb-2">📞 Phone</h3>
+                <a href={`tel:+91${devayush.phone.replace(/[^0-9]/g, '')}`} className="text-xs sm:text-lg text-blue-600 hover:text-blue-800 font-semibold break-all">
                   {devayush.phone}
                 </a>
               </div>
             )}
-            <div className={`${devayush.phone ? 'bg-green-50' : 'bg-green-50'} rounded-lg p-4`}>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">✉️ Email</h3>
-              <a href={`mailto:${devayush.email}`} className="text-green-600 hover:text-green-800 font-semibold break-all">
+            <div className={`${devayush.phone ? 'bg-green-50' : 'bg-green-50'} rounded-lg p-3 sm:p-4`}>
+              <h3 className="text-xs font-semibold text-gray-600 uppercase mb-1 sm:mb-2">✉️ Email</h3>
+              <a href={`mailto:${devayush.email}`} className="text-xs sm:text-base text-green-600 hover:text-green-800 font-semibold break-all">
                 {devayush.email}
               </a>
             </div>
@@ -3778,10 +3781,10 @@ const WholesalerScreen = () => {
 
           {/* Certifications */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-600 uppercase mb-3">✅ Certifications</h3>
+            <h3 className="text-xs font-semibold text-gray-600 uppercase mb-2 sm:mb-3">✅ Certifications</h3>
             <div className="flex flex-wrap gap-2">
               {devayush.certifications.map((cert, idx) => (
-                <span key={idx} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                <span key={idx} className="bg-green-100 text-green-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">
                   {cert}
                 </span>
               ))}
@@ -3790,15 +3793,15 @@ const WholesalerScreen = () => {
 
           {/* Product Collections */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-600 uppercase mb-3">📦 Product Collections</h3>
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <h3 className="text-xs font-semibold text-gray-600 uppercase mb-2 sm:mb-3">📦 Products</h3>
+            <div className="bg-green-50 rounded-lg p-3 sm:p-4">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
                 {devayush.catalogs.map((catalog, idx) => (
-                  <div key={idx} className="flex items-start gap-3 bg-white p-3 rounded border border-green-200">
-                    <span className="text-green-600 font-bold mt-1">•</span>
-                    <div className="flex-1">
-                      <p className="text-gray-900 font-medium text-sm">{catalog.name}</p>
-                      <p className="text-xs text-gray-600 mt-1">MOQ: <span className="font-bold text-green-600">{catalog.moq.toLocaleString()} units</span></p>
+                  <div key={idx} className="flex items-start gap-2 sm:gap-3 bg-white p-2 sm:p-3 rounded border border-green-200">
+                    <span className="text-green-600 font-bold mt-0.5 sm:mt-1 flex-shrink-0">•</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-gray-900 font-medium line-clamp-2">{catalog.name}</p>
+                      <p className="text-xs text-gray-600 mt-0.5 sm:mt-1">MOQ: <span className="font-bold text-green-600">{catalog.moq.toLocaleString()}</span></p>
                     </div>
                   </div>
                 ))}
@@ -3807,27 +3810,27 @@ const WholesalerScreen = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-2 sm:pt-4">
             <a 
               href={`mailto:ayusyaenterprise@gmail.com?subject=Wholesale Partnership Inquiry - ${devayush.name}&body=Hello,\n\nI am interested in wholesale partnership with ${devayush.name}.\n\nMOQ: ${devayush.minOrder} units\n\nPlease provide details about your products, pricing, and partnership terms.\n\nThank you!`}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              � Get Quote via Email
+              Get Quote
             </a>
             <a 
               href={`mailto:${devayush.email}?subject=Wholesale Partnership Inquiry&body=Hello,\n\nI am interested in wholesale partnership with ${devayush.name}.\n\nPlease provide details about your products, pricing, and partnership terms.\n\nMOQ: ${devayush.minOrder} units\n\nThank you!`}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              � Request Information
+              Request Info
             </a>
           </div>
         </div>
       </div>
 
       {/* Info Box */}
-      <div className="mt-8 bg-amber-50 border border-amber-200 rounded-lg p-6">
-        <h3 className="font-semibold text-amber-900 mb-2">💡 About Our Wholesalers</h3>
-        <p className="text-amber-800 text-sm">
+      <div className="mt-6 sm:mt-8 bg-amber-50 border border-amber-200 rounded-lg p-4 sm:p-6">
+        <h3 className="font-semibold text-amber-900 mb-1 sm:mb-2 text-sm sm:text-base">💡 About Our Wholesalers</h3>
+        <p className="text-amber-800 text-xs sm:text-sm leading-relaxed">
           We partner with verified wholesale suppliers who offer competitive pricing on bulk orders. All wholesalers are GSTIN verified and GMP certified. 
           Contact directly for customized pricing, bulk discounts, and special partnership offers.
         </p>
@@ -3865,36 +3868,36 @@ const MessengerScreen = () => {
   };
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Messenger & Support</h1>
-        <p className="text-gray-600">Send us your queries, concerns, or business inquiries. All messages are forwarded to our team.</p>
+    <main className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8 min-h-screen pb-20">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">Messenger & Support</h1>
+        <p className="text-xs sm:text-base text-gray-600">Send us your queries, concerns, or business inquiries. All messages are forwarded to our team.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <span className="material-symbols-outlined text-4xl text-blue-600 mb-2">business</span>
-          <h3 className="font-bold text-gray-900 mb-2">Manufacturer Inquiries</h3>
-          <p className="text-sm text-gray-600">Questions about Real Herbal Cosmetics manufacturing services</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-6">
+          <span className="material-symbols-outlined text-3xl sm:text-4xl text-blue-600 mb-1 sm:mb-2">business</span>
+          <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">Manufacturer Inquiries</h3>
+          <p className="text-xs sm:text-sm text-gray-600">Real Herbal Cosmetics manufacturing services</p>
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <span className="material-symbols-outlined text-4xl text-green-600 mb-2">storefront</span>
-          <h3 className="font-bold text-gray-900 mb-2">Wholesaler Inquiries</h3>
-          <p className="text-sm text-gray-600">Questions about Devayush Enterprises wholesale partnerships</p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-6">
+          <span className="material-symbols-outlined text-3xl sm:text-4xl text-green-600 mb-1 sm:mb-2">storefront</span>
+          <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">Wholesaler Inquiries</h3>
+          <p className="text-xs sm:text-sm text-gray-600">Devayush Enterprises wholesale partnerships</p>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
-          <span className="material-symbols-outlined text-4xl text-purple-600 mb-2">help</span>
-          <h3 className="font-bold text-gray-900 mb-2">General Support</h3>
-          <p className="text-sm text-gray-600">General inquiries and customer support requests</p>
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-6">
+          <span className="material-symbols-outlined text-3xl sm:text-4xl text-purple-600 mb-1 sm:mb-2">help</span>
+          <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">General Support</h3>
+          <p className="text-xs sm:text-sm text-gray-600">General inquiries and customer support</p>
         </div>
       </div>
 
       {/* Contact Form */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 p-4 sm:p-8">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Full Name *</label>
             <input
               type="text"
               name="name"
@@ -3902,13 +3905,13 @@ const MessengerScreen = () => {
               onChange={handleChange}
               required
               placeholder="Your full name"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
             />
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Email Address *</label>
             <input
               type="email"
               name="email"
@@ -3916,22 +3919,22 @@ const MessengerScreen = () => {
               onChange={handleChange}
               required
               placeholder="your@email.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
             />
           </div>
 
           {/* Query Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Query Type *</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Query Type *</label>
             <select
               name="queryType"
               value={formData.queryType}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
             >
               <option value="general">General Inquiry</option>
-              <option value="manufacturer">Manufacturer (Real Herbal Cosmetics)</option>
-              <option value="wholesaler">Wholesaler (Devayush Enterprises)</option>
+              <option value="manufacturer">Manufacturer (Real Herbal)</option>
+              <option value="wholesaler">Wholesaler (Devayush)</option>
               <option value="support">Customer Support</option>
               <option value="feedback">Feedback & Suggestions</option>
               <option value="partnership">Partnership & Collaboration</option>
@@ -3940,65 +3943,65 @@ const MessengerScreen = () => {
 
           {/* Subject */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Subject *</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Subject *</label>
             <input
               type="text"
               name="subject"
               value={formData.subject}
               onChange={handleChange}
               required
-              placeholder="Brief subject of your inquiry"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              placeholder="Brief subject"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
             />
           </div>
 
           {/* Message */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Message *</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Message *</label>
             <textarea
               name="message"
               value={formData.message}
               onChange={handleChange}
               required
-              rows="6"
-              placeholder="Please provide details about your inquiry..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
+              rows="5"
+              placeholder="Please provide details..."
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none text-sm"
             />
           </div>
 
           {/* Submit Button */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               type="submit"
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
             >
-              ✉️ Send Message
+              Send Message
             </button>
             <button
               type="reset"
               onClick={() => setFormData({ name: '', email: '', subject: '', queryType: 'general', message: '' })}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
             >
               Clear
             </button>
           </div>
 
           {submitted && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
-              ✅ Message sent successfully! Our team will respond to your email shortly.
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 text-green-800 text-sm">
+              ✅ Message sent! Our team will respond to your email shortly.
             </div>
           )}
         </form>
       </div>
 
       {/* Info Box */}
-      <div className="mt-8 bg-amber-50 border border-amber-200 rounded-lg p-6">
-        <h3 className="font-semibold text-amber-900 mb-2">📧 Email Support</h3>
-        <p className="text-amber-800 text-sm mb-2">
+      <div className="mt-6 sm:mt-8 bg-amber-50 border border-amber-200 rounded-lg p-4 sm:p-6">
+        <h3 className="font-semibold text-amber-900 mb-1 sm:mb-2 text-sm sm:text-base">📧 Email Support</h3>
+        <p className="text-amber-800 text-xs sm:text-sm mb-2 leading-relaxed">
           All messages are received at: <span className="font-bold">ayusyaenterprise@gmail.com</span>
         </p>
-        <p className="text-amber-800 text-sm">
-          Our team will respond to your inquiry within 24 hours. You can also use this email address to reach out directly with any questions about our manufacturer partners or wholesale offerings.
+        <p className="text-amber-800 text-xs sm:text-sm leading-relaxed">
+          Our team will respond to your inquiry within 24 hours. You can also use this email address to reach out directly with any questions.
         </p>
       </div>
     </main>
@@ -4058,38 +4061,38 @@ const RFQScreen = () => {
   );
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Request for Quotation (RFQ)</h1>
-        <p className="text-gray-600">Submit your detailed product requirements and receive competitive quotes from our manufacturers and wholesalers.</p>
+    <main className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8 min-h-screen pb-20">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">Request for Quotation (RFQ)</h1>
+        <p className="text-xs sm:text-base text-gray-600">Submit your detailed product requirements and receive competitive quotes from our manufacturers and wholesalers.</p>
       </div>
 
       {/* Benefits Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-          <span className="text-2xl">💰</span>
-          <h3 className="font-bold text-gray-900 mb-1">Best Pricing</h3>
-          <p className="text-sm text-gray-600">Get competitive quotes based on your order volume</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 sm:p-4">
+          <span className="text-2xl sm:text-3xl">💰</span>
+          <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base">Best Pricing</h3>
+          <p className="text-xs sm:text-sm text-gray-600">Get competitive quotes based on your order volume</p>
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <span className="text-2xl">⚡</span>
-          <h3 className="font-bold text-gray-900 mb-1">Fast Response</h3>
-          <p className="text-sm text-gray-600">Receive quotes within 24-48 hours</p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+          <span className="text-2xl sm:text-3xl">⚡</span>
+          <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base">Fast Response</h3>
+          <p className="text-xs sm:text-sm text-gray-600">Receive quotes within 24-48 hours</p>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <span className="text-2xl">✅</span>
-          <h3 className="font-bold text-gray-900 mb-1">Custom Solutions</h3>
-          <p className="text-sm text-gray-600">Tailored manufacturing & wholesale options</p>
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+          <span className="text-2xl sm:text-3xl">✅</span>
+          <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base">Custom Solutions</h3>
+          <p className="text-xs sm:text-sm text-gray-600">Tailored manufacturing & wholesale options</p>
         </div>
       </div>
 
       {/* RFQ Form */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8 mb-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 p-4 sm:p-8 mb-6 sm:mb-8">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
             {/* Company Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Company Name *</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Company Name *</label>
               <input
                 type="text"
                 name="company"
@@ -4097,13 +4100,13 @@ const RFQScreen = () => {
                 onChange={handleChange}
                 required
                 placeholder="Your company name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
               />
             </div>
 
             {/* Contact Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Person *</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Contact Person *</label>
               <input
                 type="text"
                 name="contactName"
@@ -4111,13 +4114,13 @@ const RFQScreen = () => {
                 onChange={handleChange}
                 required
                 placeholder="Your full name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
               />
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Email Address *</label>
               <input
                 type="email"
                 name="email"
@@ -4125,13 +4128,13 @@ const RFQScreen = () => {
                 onChange={handleChange}
                 required
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
               />
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Phone Number *</label>
               <input
                 type="tel"
                 name="phone"
@@ -4139,17 +4142,17 @@ const RFQScreen = () => {
                 onChange={handleChange}
                 required
                 placeholder="+91 XXXXXXXXXX"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
               />
             </div>
           </div>
 
           {/* Products */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Select Products *</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-4 bg-gray-50">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Select Products *</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-3 sm:p-4 bg-gray-50">
               {featuredProducts.map(product => (
-                <label key={product.id} className="flex items-start gap-3 cursor-pointer hover:bg-white p-2 rounded">
+                <label key={product.id} className="flex items-start gap-2 sm:gap-3 cursor-pointer hover:bg-white p-2 rounded">
                   <input
                     type="checkbox"
                     name="products"
@@ -4158,19 +4161,19 @@ const RFQScreen = () => {
                     onChange={handleChange}
                     className="mt-1 w-4 h-4 text-indigo-600 rounded"
                   />
-                  <span className="text-sm text-gray-700">{product.title}</span>
+                  <span className="text-xs sm:text-sm text-gray-700">{product.title}</span>
                 </label>
               ))}
             </div>
             {formData.productIds.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">Please select at least one product</p>
+              <p className="text-xs text-red-500 mt-1 sm:mt-2">Please select at least one product</p>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
             {/* Quantity */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Quantity (Units) *</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Quantity (Units) *</label>
               <input
                 type="number"
                 name="quantity"
@@ -4178,13 +4181,13 @@ const RFQScreen = () => {
                 onChange={handleChange}
                 required
                 placeholder="e.g., 10000"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
               />
             </div>
 
             {/* Budget */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Budget (₹) *</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Budget (₹) *</label>
               <input
                 type="number"
                 name="budget"
@@ -4192,20 +4195,20 @@ const RFQScreen = () => {
                 onChange={handleChange}
                 required
                 placeholder="e.g., 500000"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
               />
             </div>
           </div>
 
           {/* Timeline */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Delivery Timeline *</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Delivery Timeline *</label>
             <select
               name="timeline"
               value={formData.timeline}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm"
             >
               <option value="">Select timeline</option>
               <option value="within-15-days">Within 15 Days</option>
@@ -4218,37 +4221,37 @@ const RFQScreen = () => {
 
           {/* Requirements */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Special Requirements & Notes</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Special Requirements & Notes</label>
             <textarea
               name="requirements"
               value={formData.requirements}
               onChange={handleChange}
               rows="4"
               placeholder="Any special requirements, packaging, labeling, or additional details..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none text-sm"
             />
           </div>
 
           {/* Submit Button */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               type="submit"
               disabled={formData.productIds.length === 0}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2 sm:py-3 px-3 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
             >
-              📨 Submit RFQ
+              Submit RFQ
             </button>
             <button
               type="reset"
               onClick={() => setFormData({ company: '', contactName: '', email: '', phone: '', productIds: [], quantity: '', requirements: '', budget: '', timeline: '' })}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-3 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
             >
               Clear
             </button>
           </div>
 
           {submitted && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 text-green-800 text-sm">
               ✅ RFQ submitted successfully! Our team will review and respond with quotes within 24-48 hours.
             </div>
           )}
@@ -4256,9 +4259,9 @@ const RFQScreen = () => {
       </div>
 
       {/* Info Box */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-        <h3 className="font-semibold text-amber-900 mb-3">📋 RFQ Process</h3>
-        <ol className="text-amber-800 text-sm space-y-2 list-decimal list-inside">
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 sm:p-6">
+        <h3 className="font-semibold text-amber-900 mb-2 sm:mb-3 text-sm sm:text-base">📋 RFQ Process</h3>
+        <ol className="text-amber-800 text-xs sm:text-sm space-y-1 sm:space-y-2 list-decimal list-inside">
           <li><strong>Submit RFQ:</strong> Fill out the form above with your product requirements and quantity</li>
           <li><strong>Receive Quotes:</strong> Our manufacturers will send you competitive quotations within 24-48 hours</li>
           <li><strong>Negotiate:</strong> Compare quotes and negotiate terms directly with manufacturers</li>
