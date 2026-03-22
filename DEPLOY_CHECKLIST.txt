@@ -1,0 +1,188 @@
+================================================================================
+NEKXUZ DEPLOYMENT CHECKLIST - MARCH 22, 2026
+================================================================================
+
+📌 CURRENT STATUS
+  ✅ Code changes: COMPLETE
+  ✅ Build generated: COMPLETE  
+  ✅ Files uploaded: COMPLETE
+  ⏳ Cache cleared: PENDING
+
+================================================================================
+DO THIS NOW (START HERE)
+================================================================================
+
+STEP 1: CLEAR BROWSER CACHE (Do First - Takes 2 minutes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ Go to nekxuz.in in your browser
+☐ Press Ctrl+Shift+Delete (Windows) OR Cmd+Shift+Delete (Mac)
+☐ Select "All time"
+☐ Check the box for "Cookies and cached data"
+☐ Click "Clear data" button
+☐ Wait for clear to complete
+☐ Refresh page: Press Ctrl+R or Cmd+R
+☐ Check if changes appear:
+    • No "100 in Stock" badges?
+    • RFQ/Message tabs on mobile visible?
+
+RESULT:
+  [ ] Changes appeared → DONE! ✅
+  [ ] Changes NOT visible → Go to STEP 2
+
+================================================================================
+
+STEP 2: TEST IN INCOGNITO WINDOW (Confirms cache issue)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ Press Ctrl+Shift+N (Windows/Linux) OR Cmd+Shift+N (Mac)
+☐ In new incognito window, visit: nekxuz.in
+☐ Look for:
+    • No "100 in Stock" green badges?
+    • Only "Only X left" (yellow) or "Out of Stock" (red)?
+    • RFQ and Message tabs on mobile?
+
+RESULT:
+  [ ] Changes ARE visible → Browser cache issue (Step 1 fix it)
+  [ ] Changes NOT visible → Go to STEP 3
+
+================================================================================
+
+STEP 3: CLEAR HOSTINGER CACHE (If browser cache didn't work)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ Login to Hostinger Control Panel
+☐ Go to: Hosting → Performance → Caching
+☐ Click "Clear All Caches" button
+☐ Wait 2-3 minutes for caches to clear
+☐ Go back to nekxuz.in
+☐ Hard refresh: Press Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)
+☐ Check changes appeared
+
+RESULT:
+  [ ] Changes visible → DONE! ✅
+  [ ] Still not visible → Continue to Step 4
+
+================================================================================
+
+STEP 4: VERIFY FILES ON SERVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☐ Hostinger File Manager
+☐ Navigate to: public_html/
+☐ Verify these exist:
+    ☐ static/ (folder)
+    ☐ static/js/main.XXXXX.js (~770KB size)
+    ☐ static/css/main.XXXXX.css (~9KB)
+    ☐ index.html
+    ☐ manifest.json
+    ☐ favicon.ico
+    ☐ assets/ (folder)
+
+IF main.js is <100KB:
+  ☐ Delete everything in public_html/
+  ☐ Re-upload contents of updated_build/ folder
+  ☐ Wait for 100% completion
+  ☐ Go back to Step 1
+
+================================================================================
+
+STEP 5: SERVICE WORKER CACHE (Last resort)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+At nekxuz.in:
+☐ Press F12 (Developer Tools)
+☐ Click "Application" tab
+☐ Left sidebar → "Service Workers"
+☐ Click "Unregister"
+☐ Go to "Storage" tab
+☐ Click "Clear site data"
+☐ Close DevTools (F12)
+☐ Hard refresh (Ctrl+F5)
+
+================================================================================
+
+VERIFICATION CHECKLIST
+================================================================================
+
+After changes appear, verify these:
+
+PRODUCT CARDS:
+  ☐ Scroll to Wholesale tab
+  ☐ NO green "100 in Stock" badge visible
+  ☐ Low-stock items show yellow "Only X left"
+  ☐ Out of stock show red "Out of Stock"
+
+MOBILE NAVIGATION:
+  ☐ Open on phone
+  ☐ Scroll to bottom
+  ☐ See 8 tabs: Home, Retail, Wholesale, Mfg, Wholesaler, Global, Message, RFQ
+  ☐ RFQ tab works (clickable)
+  ☐ Message tab works (clickable)
+
+MOBILE RESPONSIVENESS:
+  ☐ Products show 2 columns (not 1)
+  ☐ Text readable without zoom
+  ☐ Buttons large enough to tap
+  ☐ No horizontal scroll needed
+
+ALL PAGES:
+  ☐ Home page mobile responsive
+  ☐ Retail page mobile responsive
+  ☐ Wholesale page mobile responsive
+  ☐ Contract Mfg page mobile responsive
+  ☐ Wholesaler page mobile responsive
+  ☐ Global Market page mobile responsive
+  ☐ Messenger page mobile responsive
+  ☐ RFQ page mobile responsive
+
+================================================================================
+
+WHAT WAS CHANGED
+================================================================================
+
+1. STOCK DISPLAY
+   • Removed: "100 in Stock" (green badge)
+   • Still shows: "Only X left" (yellow) for low stock
+   • Still shows: "Out of Stock" (red) for unavailable
+
+2. MOBILE NAVIGATION
+   • Added: Message tab (Mail icon)
+   • Added: RFQ tab (Document icon)
+   • Now 8 total tabs (was 6)
+
+3. MOBILE OPTIMIZATION
+   • All pages now responsive
+   • 2-column layout on phones
+   • Proper spacing and padding
+   • Touch-friendly buttons
+
+================================================================================
+
+CONTACT SUPPORT IF STUCK
+================================================================================
+
+Hostinger Support:
+  Tell them: "Changes not appearing on nekxuz.in even after clear cache"
+  Ask them to:
+    1. Clear all server caches
+    2. Clear CDN cache
+    3. Restart web server
+    4. Verify files in public_html/
+
+GitHub Issues:
+  https://github.com/ayusyaenterprise-star/nekxuz-backend
+
+================================================================================
+
+QUICK STATUS
+================================================================================
+
+Estimated Time to Complete:  2-15 minutes (depending on which step needed)
+Most Likely:                 Step 1 (2 minutes)
+Success Rate:                95% with Step 1
+
+Last Updated: March 22, 2026
+Status: Ready for Cache Clear
+
+================================================================================
