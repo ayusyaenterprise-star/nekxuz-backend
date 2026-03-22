@@ -2945,9 +2945,9 @@ const RetailScreen = ({ onAddToCart, onOpenAI, onProductClick, getDiscount, stoc
   const flashSaleProducts = retailFromMfgProducts.length > 0 ? retailFromMfgProducts : ALL_PRODUCTS.filter(p => ['blueva3', 'blueva4', 'blueva5', 'combo1', 'devson1', 'vs1', 'vs2', 'vs3'].includes(p.id));
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8 lg:px-8 space-y-10">
+    <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:px-8 space-y-6 sm:space-y-10 min-h-screen pb-20">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-yellow-50 to-red-50 rounded-xl sm:rounded-3xl p-4 sm:p-8 border border-yellow-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+      <div className="bg-gradient-to-r from-yellow-50 to-red-50 rounded-lg sm:rounded-3xl p-3 sm:p-8 border border-yellow-200 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
         <div className="size-14 sm:size-20 rounded-full bg-yellow-400 flex items-center justify-center text-white shadow-lg flex-shrink-0">
           <span className="material-symbols-outlined text-3xl sm:text-5xl fill-current">bolt</span>
         </div>
@@ -2976,7 +2976,7 @@ const RetailScreen = ({ onAddToCart, onOpenAI, onProductClick, getDiscount, stoc
         </div>
 
         {/* VelSoft Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
           {ALL_PRODUCTS.filter(p => ['vs1', 'vs2', 'vs3'].includes(p.id)).map(p => (
             <div key={p.id} onClick={() => onProductClick(p)} className="group relative bg-white rounded-2xl border-2 border-red-200 overflow-hidden hover:shadow-2xl transition-all cursor-pointer flex flex-col justify-between shadow-md hover:border-red-400">
               {/* Exclusive Badge */}
@@ -3067,7 +3067,7 @@ const RetailScreen = ({ onAddToCart, onOpenAI, onProductClick, getDiscount, stoc
             <p className="text-gray-600 font-semibold">No flash sale products available right now</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
             {flashSaleProducts.map(p => (
               <div key={p.id} onClick={() => onProductClick(p)} className="group relative bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between shadow-sm">
                 {/* Sale Badge */}
@@ -3151,21 +3151,21 @@ const RetailScreen = ({ onAddToCart, onOpenAI, onProductClick, getDiscount, stoc
       </section>
 
       {/* Why Buy from Us */}
-      <section className="bg-gradient-to-r from-primary/5 to-gray-50 rounded-3xl p-8 border border-gray-100">
-        <h3 className="text-2xl font-bold mb-6 text-gray-900">Why Choose Direct from Manufacturer?</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="bg-gradient-to-r from-primary/5 to-gray-50 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-gray-100">
+        <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900">Why Choose Direct from Manufacturer?</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {[
             { icon: "price_check", title: "Direct Pricing", desc: "Eliminate middlemen - buy directly from manufacturers at factory rates" },
             { icon: "verified_user", title: "Verified Quality", desc: "All products are certified and comply with regulatory standards" },
             { icon: "local_shipping", title: "Fast Shipping", desc: "Pan-India delivery in 3-7 business days with real-time tracking" },
             { icon: "support_agent", title: "24/7 Support", desc: "Dedicated customer support for bulk orders and customization" }
           ].map((item, idx) => (
-            <div key={idx} className="flex flex-col items-center text-center p-4">
-              <div className="size-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-3">
-                <span className="material-symbols-outlined text-secondary text-[28px]">{item.icon}</span>
+            <div key={idx} className="flex flex-col items-center text-center p-3 sm:p-4">
+              <div className="size-14 sm:size-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-2 sm:mb-3">
+                <span className="material-symbols-outlined text-secondary text-[24px] sm:text-[28px]">{item.icon}</span>
               </div>
-              <h4 className="font-bold text-gray-900 mb-2">{item.title}</h4>
-              <p className="text-sm text-gray-600">{item.desc}</p>
+              <h4 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">{item.title}</h4>
+              <p className="text-xs sm:text-sm text-gray-600 leading-snug">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -3366,15 +3366,15 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 space-y-8 sm:space-y-16 lg:px-8">
         {/* Wholesale Opportunities - TOP */}
         <section className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-green-100">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="flex items-center gap-2 sm:gap-4">
 
-              <div className="size-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                <span className="material-symbols-outlined text-white text-3xl">storefront</span>
+              <div className="size-12 sm:size-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="material-symbols-outlined text-white text-2xl sm:text-3xl">storefront</span>
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">Wholesale Opportunities</h2>
-                <p className="text-gray-600 text-sm mt-1">Bulk orders with exceptional margins</p>
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900">Wholesale Opportunities</h2>
+                <p className="text-gray-600 text-xs sm:text-sm mt-0.5 sm:mt-1">Bulk orders with exceptional margins</p>
               </div>
             </div>
             <div className="text-right hidden md:block">
@@ -3389,7 +3389,7 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
               <p className="text-gray-600 font-semibold">No wholesale products available</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
               {wholesaleProducts.map(p => (
                 <ProductCard 
                   key={p.id} 
@@ -3402,20 +3402,20 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
         </section>
 
         {/* White Label Solutions */}
-        <section className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 rounded-3xl p-8 border border-indigo-100">
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-4">
-              <div className="size-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg">
-                <span className="material-symbols-outlined text-white text-3xl">card_giftcard</span>
+        <section className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-50 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-indigo-100">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="size-12 sm:size-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="material-symbols-outlined text-white text-2xl sm:text-3xl">card_giftcard</span>
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">White Label Solutions</h2>
-                <p className="text-gray-600 text-sm mt-1">Customize & brand as your own</p>
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900">White Label Solutions</h2>
+                <p className="text-gray-600 text-xs sm:text-sm mt-0.5 sm:mt-1">Customize & brand as your own</p>
               </div>
             </div>
             <div className="text-right hidden md:block">
-              <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Your Brand</div>
-              <p className="text-sm text-gray-500 mt-1">Custom Packaging will Available soon</p>
+              <div className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Your Brand</div>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Custom Packaging will Available soon</p>
             </div>
           </div>
 
@@ -3425,7 +3425,7 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
               <p className="text-gray-600 font-semibold">No white label products available</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
               {whitelabelProducts.map(p => (
                 <ProductCard 
                   key={p.id} 
@@ -3439,16 +3439,16 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
 
         {/* Retail from Manufacturers */}
         <section>
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <span className="material-symbols-outlined text-orange-500 text-[32px]">store</span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                <span className="material-symbols-outlined text-orange-500 text-[24px] sm:text-[32px]">store</span>
                 Retail from Manufacturers
               </h2>
-              <p className="text-gray-500 text-sm mt-2">Exclusive direct-from-factory retail collections</p>
+              <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-2">Exclusive direct-from-factory retail collections</p>
             </div>
-            <button onClick={() => navigate('retail')} className="text-primary font-bold hover:underline flex items-center gap-1 text-sm">
-              See All <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <button onClick={() => navigate('retail')} className="text-primary font-bold hover:underline flex items-center gap-1 text-xs sm:text-sm whitespace-nowrap">
+              See All <span className="material-symbols-outlined text-[16px] sm:text-[18px]">arrow_forward</span>
             </button>
           </div>
 
@@ -3458,7 +3458,7 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
               <p className="text-gray-600 font-semibold">No products available</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
               {retailFromMfgProducts.map(p => (
                 <ProductCard 
                   key={p.id} 
@@ -3472,16 +3472,16 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
 
         {/* Top Selling Products - BOTTOM */}
         <section>
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary fill-current text-[32px]">shopping_cart</span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                <span className="material-symbols-outlined text-primary fill-current text-[24px] sm:text-[32px]">shopping_cart</span>
                 Top Selling Products
               </h2>
-              <p className="text-gray-500 text-sm mt-2">Most popular choices among retail buyers nationwide</p>
+              <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-2">Most popular choices among retail buyers nationwide</p>
             </div>
-            <button onClick={() => navigate('retail')} className="text-primary font-bold hover:underline flex items-center gap-1 text-sm">
-              See All <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <button onClick={() => navigate('retail')} className="text-primary font-bold hover:underline flex items-center gap-1 text-xs sm:text-sm whitespace-nowrap">
+              See All <span className="material-symbols-outlined text-[16px] sm:text-[18px]">arrow_forward</span>
             </button>
           </div>
 
@@ -3491,7 +3491,7 @@ const HomeScreen = ({ navigate, onAddToCart, onOpenAI, onProductClick, stock = {
               <p className="text-gray-600 font-semibold">No products available</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
               {topSellingProducts.map(p => (
                 <ProductCard 
                   key={p.id} 
